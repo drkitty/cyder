@@ -209,8 +209,7 @@ class Range(models.Model, ObjectUrlMixin):
         if self.allow == ALLOW_ANY:
             allow = []
         elif self.allow == ALLOW_KNOWN:
-            # FIXME: add hyphen once compatibility with Maintain is established
-            allow = ['allow known clients']
+            allow = ['allow known-clients']
         else:
             allow = []
             if (self.allow == ALLOW_VRF or
