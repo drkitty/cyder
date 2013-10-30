@@ -141,6 +141,13 @@ class DynamicInterface(models.Model, ObjectUrlMixin):
         super(DynamicInterface, self).delete()
         if rng and update_range_usage:
             rng.save()
+            self._range_saved = True
+
+
+@receiver(post_delete, sender=StaticInterface)
+def delete(sender, **kwargs):
+    if not (hasattr(sender, '_range_saved') and sender.range_saved):
+        sender.range.save()
 
 
 class DynamicIntrKeyValue(CommonOption):

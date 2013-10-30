@@ -1,6 +1,8 @@
 from gettext import gettext as _
 
 from django.db import models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from django.core.exceptions import ValidationError
 
 import cydns
@@ -166,9 +168,11 @@ class StaticInterface(BaseAddressRecord, BasePTR):
                 self.system.delete()
 
         super(StaticInterface, self).delete(*args, **kwargs)
+        # ^ goes to BaseAddressRecord
+
         if rng and update_range_usage:
             rng.save()
-        # ^ goes to BaseAddressRecord
+            self._range_saved = True
 
     def check_A_PTR_collision(self):
         if PTR.objects.filter(ip_str=self.ip_str).exists():
@@ -273,6 +277,12 @@ class StaticInterface(BaseAddressRecord, BasePTR):
 
     def obj_type(self):
         return 'A/PTR'
+
+
+@receiver(post_delete, sender=StaticInterface)
+def delete(sender, **kwargs):
+    if not (hasattr(sender, '_range_saved') and sender.range_saved):
+        sender.range.save()
 
 
 class StaticIntrKeyValue(CommonOption):
