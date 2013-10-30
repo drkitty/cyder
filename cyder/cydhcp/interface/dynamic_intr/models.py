@@ -1,4 +1,6 @@
+from django.db.models.signals import post_delete
 from django.db import models
+from django.dispatch import receiver
 
 from cyder.cydhcp.interface.dynamic_intr.validation import is_dynamic_range
 from cyder.cydhcp.keyvalue.base_option import CommonOption
@@ -132,12 +134,18 @@ class DynamicInterface(BaseModel, ObjectUrlMixin):
         super(DynamicInterface, self).delete()
         if rng and update_range_usage:
             rng.save()
+        self._deleted = True
 
     def save(self, *args, **kwargs):
         update_range_usage = kwargs.pop('update_range_usage', True)
         super(DynamicInterface, self).save()
         if self.range and update_range_usage:
             self.range.save()
+
+@receiver(post_delete, sender=DynamicInterface)
+def delete(sender, **kwargs):
+    if not (hasattr(sender, '_deleted') and sender._deleted):
+        sender.range.save()
 
 
 class DynamicIntrKeyValue(CommonOption):
