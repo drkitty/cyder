@@ -7,6 +7,7 @@ import sys
 import syslog
 from traceback import format_exception
 
+from cyder.base.constants import IP_TYPE_4, IP_TYPE_6
 from cyder.base.mixins import MutexMixin
 from cyder.base.utils import (copy_tree, dict_merge, log, run_command,
                               set_attrs, shell_out)
@@ -32,7 +33,7 @@ class DHCPBuilder(MutexMixin):
         if self.log_syslog:
             syslog.openlog(b'dhcp_build', 0, syslog.LOG_LOCAL6)
 
-        self.repo = GitRepo(self.prod_dir, self.line_change_limit,
+        self.repo = GitRepo(self.prod_repo, self.line_change_limit,
             self.line_removal_limit, debug=self.debug,
             log_syslog=self.log_syslog, logger=syslog)
 
@@ -96,21 +97,36 @@ class DHCPBuilder(MutexMixin):
         self.log_info('Building...')
 
         try:
-            with open(os.path.join(self.stage_dir, self.target_file), 'w') \
+            with open(os.path.join(self.stage_dir4, self.target_file4), 'w') \
                     as f:
                 for ctnr in Ctnr.objects.all():
                     f.write(ctnr.build_legacy_classes())
                 for vrf in Vrf.objects.all():
                     f.write(vrf.build_vrf())
-                for network in Network.objects.filter(enabled=True):
+                for network in Network.objects.filter(enabled=True,
+                        ip_type=IP_TYPE_4):
                     f.write(network.build_subnet())
                 for workgroup in Workgroup.objects.all():
                     f.write(workgroup.build_workgroup())
         except:
             self.error()
 
-        if self.check_file:
-            self.check_syntax()
+        try:
+            with open(os.path.join(self.stage_dir6, self.target_file6), 'w') \
+                    as f:
+                for ctnr in Ctnr.objects.all():
+                    f.write(ctnr.build_legacy_classes())
+                for vrf in Vrf.objects.all():
+                    f.write(vrf.build_vrf())
+                for network in Network.objects.filter(enabled=True,
+                        ip_type=IP_TYPE_6):
+                    f.write(network.build_subnet())
+                for workgroup in Workgroup.objects.all():
+                    f.write(workgroup.build_workgroup())
+        except:
+            self.error()
+
+        self.check_syntax()
 
         self.log_info('DHCP build successful')
 
@@ -118,7 +134,8 @@ class DHCPBuilder(MutexMixin):
         self.repo.reset_and_pull()
 
         try:
-            copy_tree(self.stage_dir, self.prod_dir)
+            copy_tree(self.stage_dir4, self.prod_dir4)
+            copy_tree(self.stage_dir6, self.prod_dir6)
         except:
             self.repo.reset_to_head()
             raise
@@ -135,17 +152,29 @@ class DHCPBuilder(MutexMixin):
         raise
 
     def check_syntax(self):
-        out, err, ret = run_command("{0} -t -cf {1}".format(
-            self.dhcpd, os.path.join(self.stage_dir, self.check_file)
-        ))
-
-        if ret != 0:
+        def syntax_error(err):
             log_msg = 'DHCP build failed due to a syntax error'
             exception_msg = log_msg + ('\n{0} said:\n{1}'
                                        .format(self.dhcpd, err))
 
             self.log_err(log_msg, to_stderr=False)
             raise Exception(exception_message)
+
+        if self.check_file4:
+            out4, err4, ret4 = run_command("{0} -4 -t -cf {1}".format(
+                self.dhcpd, os.path.join(self.stage_dir4, self.check_file4)
+            ))
+
+            if ret4 != 0:
+                syntax_error(err4)
+
+        if self.check_file6:
+            out6, err6, ret6 = run_command("{0} -6 -t -cf {1}".format(
+                self.dhcpd, os.path.join(self.stage_dir6, self.check_file6)
+            ))
+
+            if ret6 != 0:
+                syntax_error(err6)
 
     def _lock_failure(self, pid):
         self.log_err(

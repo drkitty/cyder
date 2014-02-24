@@ -264,22 +264,28 @@ BINDBUILD = {
 DHCPBUILD = {
     # stage_dir: Where test builds should go. This shouldn't be under
     # version control.
-    'stage_dir': '/tmp/dhcp/stage',
+    'stage_dir4': '/tmp/dhcp/stage4',
+    'stage_dir6': '/tmp/dhcp/stage6',
+
+    'prod_repo': '/tmp/dhcp/prod',
 
     # prod_dir: Where Cyder will place the dhcpd configuration file. This
-    # should be a Git repo.
-    'prod_dir': '/tmp/dhcp/prod',
+    # should be inside a Git repo.
+    'prod_dir4': '/tmp/dhcp/prod/v4',
+    'prod_dir6': '/tmp/dhcp/prod/v6',
 
     'lock_file': '/tmp/cyder_dhcp.lock',
     'pid_file': '/tmp/cyder_dhcp.pid',
     'dhcpd': 'dhcpd',
 
     # target_file: The configuration file that will be generated
-    'target_file': 'dhcpd.conf.data',
+    'target_file4': 'dhcpd.conf.data',
+    'target_file6': 'dhcpd.conf.data',
 
     # check_file: The conf file whose syntax will be checked (None means don't
     # check any file)
-    'check_file': None,
+    'check_file4': None,
+    'check_file6': None,
 
     'line_change_limit': 500,
     'line_removal_limit': None,
