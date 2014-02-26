@@ -96,35 +96,23 @@ class DHCPBuilder(MutexMixin):
 
         self.log_info('Building...')
 
-        try:
-            with open(os.path.join(self.stage_dir4, self.target_file4), 'w') \
-                    as f:
-                for ctnr in Ctnr.objects.all():
-                    f.write(ctnr.build_legacy_classes())
-                for vrf in Vrf.objects.all():
-                    f.write(vrf.build_vrf())
-                for network in Network.objects.filter(enabled=True,
-                        ip_type=IP_TYPE_4):
-                    f.write(network.build_subnet())
-                for workgroup in Workgroup.objects.all():
-                    f.write(workgroup.build_workgroup())
-        except:
-            self.error()
-
-        try:
-            with open(os.path.join(self.stage_dir6, self.target_file6), 'w') \
-                    as f:
-                for ctnr in Ctnr.objects.all():
-                    f.write(ctnr.build_legacy_classes())
-                for vrf in Vrf.objects.all():
-                    f.write(vrf.build_vrf())
-                for network in Network.objects.filter(enabled=True,
-                        ip_type=IP_TYPE_6):
-                    f.write(network.build_subnet())
-                for workgroup in Workgroup.objects.all():
-                    f.write(workgroup.build_workgroup())
-        except:
-            self.error()
+        for stage_dir, target_file, ip_type in (
+                (self.stage_dir4, self.target_file4, IP_TYPE_4),
+                (self.stage_dir6, self.target_file6, IP_TYPE_6)):
+            try:
+                with open(os.path.join(self.stage_dir4, self.target_file4),
+                          'w') as f:
+                    for ctnr in Ctnr.objects.all():
+                        f.write(ctnr.build_legacy_classes(ip_type))
+                    for vrf in Vrf.objects.all():
+                        f.write(vrf.build_vrf())
+                    for network in Network.objects.filter(enabled=True,
+                            ip_type=ip_type):
+                        f.write(network.build_subnet())
+                    for workgroup in Workgroup.objects.all():
+                        f.write(workgroup.build_workgroup())
+            except:
+                self.error()
 
         self.check_syntax()
 

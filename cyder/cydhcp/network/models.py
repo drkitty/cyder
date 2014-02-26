@@ -227,8 +227,7 @@ class Network(BaseModel, ObjectUrlMixin):
             build_str = "\nsubnet {0} netmask {1} {{\n".format(
                 self.network.network, self.network.netmask)
         else:
-            build_str = "\nsubnet6 {0} netmask {1} {{\n".format(
-                self.network.network, self.network.netmask)
+            build_str = "\nsubnet6 {0} {{\n".format(self.network_str)
         if not raw:
             build_str += "\t# Network statements\n"
             build_str += join_dhcp_args(statements)

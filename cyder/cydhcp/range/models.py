@@ -321,10 +321,13 @@ class Range(BaseModel, ViewMixin, ObjectUrlMixin):
             attribute__attribute_type=ATTRIBUTE_OPTION)
         range_statements = self.rangeav_set.filter(
             attribute__attribute_type=ATTRIBUTE_STATEMENT)
-        build_str = "\tpool {\n"
-        build_str += "\t\t# Pool Statements\n"
-        build_str += "\t\tfailover peer \"dhcp\";\n"
-        build_str += "\t\tdeny dynamic bootp clients;\n"
+        if self.ip_type == IP_TYPE_4:
+            build_str = "\tpool {\n"
+            build_str += "\t\t# Pool Statements\n"
+            build_str += "\t\tfailover peer \"dhcp\";\n"
+            build_str += "\t\tdeny dynamic bootp clients;\n"
+        else:
+            build_str = "\tpool6 {\n"
         build_str += join_dhcp_args(range_statements, depth=2)
         if range_options:
             build_str += "\t\t# Pool Options\n"
@@ -338,7 +341,7 @@ class Range(BaseModel, ViewMixin, ObjectUrlMixin):
             build_str += "\t\trange {0} {1};\n".format(self.start_str,
                                                        self.end_str)
         else:
-            build_str += "\t\trange6{0} {1};\n".format(self.start_str,
+            build_str += "\t\trange6 {0} {1};\n".format(self.start_str,
                                                        self.end_str)
         build_str += "\t}\n\n"
         return build_str
