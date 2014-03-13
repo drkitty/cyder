@@ -108,7 +108,8 @@ class DynamicInterface(BaseModel, ObjectUrlMixin, ExpirableMixin):
         if not self.system.name:
             return self.range.domain.name
         else:
-            return "{0}.{1}".format(self.system.name, self.range.domain.name)
+            return "{0}.{1}".format(self.system.name + '-' + str(self.id),
+                                    self.range.domain.name)
 
     def clean(self, *args, **kwargs):
         super(DynamicInterface, self).clean(*args, **kwargs)
