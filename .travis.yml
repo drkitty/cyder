@@ -10,6 +10,7 @@ install:
     - sed -i "s|SASS_BIN = '[^']*'|SASS_BIN = '`which sass`'|" cyder/settings/local.py
 before_script:
     - mysql -e 'create database cyder;'
+    - python manage.py schemamigration --auto cyder
 script: python manage.py test cyder
 
 notifications:
