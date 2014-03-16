@@ -498,7 +498,6 @@ class BaseDetailView(DetailView):
 
 
 class BaseCreateView(CreateView):
-    template_name = "form.html"
     extra_context = None
 
     def post(self, request, *args, **kwargs):
@@ -510,9 +509,6 @@ class BaseCreateView(CreateView):
             request.method = 'GET'
             return super(BaseCreateView, self).get(request, *args, **kwargs)
         return obj
-
-    def get(self, request, *args, **kwargs):
-        return super(BaseCreateView, self).get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(CreateView, self).get_context_data(**kwargs)
@@ -528,15 +524,10 @@ class BaseCreateView(CreateView):
 
 
 class BaseUpdateView(UpdateView):
-    template_name = "form.html"
     extra_context = None
 
     def __init__(self, *args, **kwargs):
         super(UpdateView, self).__init__(*args, **kwargs)
-
-    def get_form(self, form_class):
-        form = super(BaseUpdateView, self).get_form(form_class)
-        return form
 
     def post(self, request, *args, **kwargs):
         try:
@@ -549,26 +540,8 @@ class BaseUpdateView(UpdateView):
 
         return obj
 
-    def get(self, request, *args, **kwargs):
-        return super(BaseUpdateView, self).get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super(UpdateView, self).get_context_data(**kwargs)
-        context['form_title'] = "Update {0}".format(
-            self.form_class.Meta.model.__name__
-        )
-
-        # Extra_context takes precedence over original values in context.
-        try:
-            context = dict(context.items() + self.extra_context.items())
-        except AttributeError:
-            pass
-
-        return context
-
 
 class BaseDeleteView(DeleteView):
-    template_name = 'confirm_delete.html'
     extra_content = None
     success_url = '/'
 

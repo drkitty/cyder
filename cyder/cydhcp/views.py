@@ -19,7 +19,7 @@ def cydhcp_view(request, pk=None):
 
 
 def cydhcp_create(request, pk=None):
-    return cy_view(request, 'cydhcp/cydhcp_form.html', pk)
+    return cy_view(request, None, pk)
 
 
 def cydhcp_search_obj(request):
