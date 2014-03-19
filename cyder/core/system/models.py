@@ -13,7 +13,7 @@ from cyder.core.system.validators import validate_no_spaces
 
 class System(BaseModel, ObjectUrlMixin):
     name = models.CharField(
-        max_length=255, unique=False, null=False, blank=False,
+        max_length=55, unique=False, null=False, blank=False,
         validators=[validate_no_spaces])
 
     search_fields = ('name',)
