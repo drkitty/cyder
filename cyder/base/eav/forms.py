@@ -8,9 +8,10 @@ from cyder.base.eav.models import Attribute
 def get_eav_form(eav_model, entity_model):
     class EAVForm(forms.ModelForm):
         def __init__(self, *args, **kwargs):
-            if 'instance' in kwargs and kwargs['instance'] is not None:
-                # This is a bound form with a real instance
+            # Is this is a bound form with a real instance?
+            bound = 'instance' in kwargs and kwargs['instance'] is not None
 
+            if bound:
                 if 'initial' not in kwargs:
                     kwargs['initial'] = dict()
 
@@ -24,8 +25,17 @@ def get_eav_form(eav_model, entity_model):
 
             super(EAVForm, self).__init__(*args, **kwargs)
 
-        attribute_type = forms.ChoiceField(
-            choices=eav_model._meta.get_field('attribute').type_choices)
+            if bound:
+                self.fields['attribute'].queryset = Attribute.objects.filter(
+                    attribute_type__in=
+                        eav_model._meta.get_field('attribute').type_choices)
+
+
+        attribute_type = forms.ChoiceField(choices=(
+            (attr_type, dict(ATTRIBUTE_TYPES)[attr_type])
+            for attr_type
+            in eav_model._meta.get_field('attribute').type_choices
+        ))
 
         entity = forms.ModelChoiceField(
             queryset=entity_model.objects.all(),
