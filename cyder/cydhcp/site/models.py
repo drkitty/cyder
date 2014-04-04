@@ -117,5 +117,4 @@ class SiteAV(EAVBase):
 
 
     entity = models.ForeignKey(Site)
-    attribute = EAVAttributeField(Attribute,
-        type_choices=(ATTRIBUTE_INVENTORY,))
+    attribute = EAVAttributeField(type_choices=(ATTRIBUTE_INVENTORY,))

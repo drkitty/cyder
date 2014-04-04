@@ -88,5 +88,4 @@ class VrfAV(EAVBase):
 
 
     entity = models.ForeignKey(Vrf)
-    attribute = EAVAttributeField(Attribute,
-        type_choices=(ATTRIBUTE_INVENTORY,))
+    attribute = EAVAttributeField(type_choices=(ATTRIBUTE_INVENTORY,))

@@ -90,5 +90,4 @@ class VlanAV(EAVBase):
 
 
     entity = models.ForeignKey(Vlan)
-    attribute = EAVAttributeField(Attribute,
-        type_choices=(ATTRIBUTE_INVENTORY,))
+    attribute = EAVAttributeField(type_choices=(ATTRIBUTE_INVENTORY,))

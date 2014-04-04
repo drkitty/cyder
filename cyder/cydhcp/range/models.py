@@ -481,7 +481,7 @@ class RangeAV(EAVBase):
         db_table = 'range_av'
 
     entity = models.ForeignKey(Range)
-    attribute = EAVAttributeField(Attribute)
+    attribute = EAVAttributeField()
 
 
 class RangeOverflowError(ValidationError):

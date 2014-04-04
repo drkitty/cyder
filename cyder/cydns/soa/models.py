@@ -218,5 +218,4 @@ class SOAAV(EAVBase):
 
 
     entity = models.ForeignKey(SOA)
-    attribute = EAVAttributeField(Attribute,
-        type_choices=(ATTRIBUTE_INVENTORY,))
+    attribute = EAVAttributeField(type_choices=(ATTRIBUTE_INVENTORY,))

@@ -89,4 +89,4 @@ class WorkgroupAV(EAVBase):
 
 
     entity = models.ForeignKey(Workgroup)
-    attribute = EAVAttributeField(Attribute)
+    attribute = EAVAttributeField()

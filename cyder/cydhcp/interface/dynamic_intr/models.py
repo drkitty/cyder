@@ -143,6 +143,4 @@ class DynamicInterfaceAV(EAVBase):
         db_table = "dynamic_interface_av"
 
     entity = models.ForeignKey(DynamicInterface)
-    attribute = EAVAttributeField(
-        Attribute,
-        type_choices=(ATTRIBUTE_INVENTORY,))
+    attribute = EAVAttributeField(type_choices=(ATTRIBUTE_INVENTORY,))

@@ -279,4 +279,4 @@ class NetworkAV(EAVBase):
 
 
     entity = models.ForeignKey(Network)
-    attribute = EAVAttributeField(Attribute)
+    attribute = EAVAttributeField()

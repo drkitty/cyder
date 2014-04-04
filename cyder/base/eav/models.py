@@ -31,7 +31,7 @@ class EAVBase(BaseModel, ObjectUrlMixin):
 
     When you inherit from this model, you must define the following fields::
         entity = ForeignKey(ENTITY)
-        attribute = EAVAttributeField(Attribute)
+        attribute = EAVAttributeField()
     where ENTITY is the entity model.
 
     If you define a custom Meta class on your model, ensure it inherits from

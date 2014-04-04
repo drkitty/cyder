@@ -116,64 +116,26 @@ class EAVAttributeField(models.ForeignKey):
     """
 
     def __init__(self, *args, **kwargs):
-        if 'type_choices' in kwargs:
-            kwargs['limit_choices_to'] = \
-                {'attribute_type__in': kwargs['type_choices']}
+        from cyder.base.eav.models import Attribute
 
-            self.type_choices = [
-                (attr_type, dict(ATTRIBUTE_TYPES)[attr_type])
-                for attr_type in kwargs.pop('type_choices')
-            ]
-        else:
-            self.type_choices = ATTRIBUTE_TYPES
-
-        super(EAVAttributeField, self).__init__(*args, **kwargs)
+        self.type_choices = kwargs.pop(
+            'type_choices',
+            (ATTRIBUTE_INVENTORY, ATTRIBUTE_OPTION, ATTRIBUTE_STATEMENT)
+        )
+        kwargs['limit_choices_to'] = {'attribute_type__in': self.type_choices}
+        super(EAVAttributeField, self).__init__(Attribute, *args, **kwargs)
 
     def validate(self, value, model_instance):
         from cyder.base.eav.models import Attribute
 
         attr = Attribute.objects.get(pk=value)
         type_ = attr.attribute_type
-        valid = any(type_choice == type_
-                    for (type_choice, _) in self.type_choices)
+        valid = type_ in self.type_choices
         if not valid:
             raise ValidationError("Attribute '%s' is not allowed on this "
                                   "object" % attr)
 
         super(EAVAttributeField, self).validate(value, model_instance)
-
-    def formfield(self, **kwargs):
-        return AttributeFormField(choices_query=self.rel.limit_choices_to,
-                                  **kwargs)
-
-
-class AttributeFormField(forms.CharField):
-    """
-    This field is the form field for EAVAttributeField; the user inputs a
-    attribute name, and the field converts that to a reference to the actual
-    Attribute object, raising a ValidationError if the attribute name is
-    invalid.
-    """
-
-    def __init__(self, *args, **kwargs):
-        if 'choices_query' in kwargs:
-            self.choices_query = kwargs.pop('choices_query')
-        else:
-            raise Exception("The 'choices_query' argument is required")
-
-        super(AttributeFormField, self).__init__(*args, **kwargs)
-
-    def to_python(self, value):
-        from cyder.base.eav.models import Attribute
-
-        try:
-            return Attribute.objects.get(name=value, **self.choices_query)
-        except Attribute.DoesNotExist:
-            if Attribute.objects.filter(name=value).exists():
-                raise ValidationError('This attribute is not allowed on this '
-                                      'object')
-            else:
-                raise ValidationError('No such attribute')
 
 
 # "Introspection rules" tell South which custom field arguments it needs to
