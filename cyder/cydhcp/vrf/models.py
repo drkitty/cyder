@@ -63,20 +63,21 @@ class Vrf(BaseModel, ObjectUrlMixin):
         ]}
 
     def build_vrf(self):
+        from cyder.cydhcp.interface.dynamic_intr.models import DynamicInterface
+
         build_str = ('class "{0}" {{\n'
                      '\tmatch hardware;\n'
                      '}}\n'
                      .format(self.name))
 
+        for di in DynamicInterface.objects.filter(
+                dhcp_enabled=True, range__network__vrf=self):
+            build_str += di.build_subclass(self.name)
+
         for network_ in self.network_set.all():
             for range_ in network_.range_set.all():
-                clients = chain(
-                    range_.staticinterfaces.filter(dhcp_enabled=True),
-                    range_.dynamicinterface_set.filter(dhcp_enabled=True)
-                )
-                for client in clients:
-                    build_str += client.build_subclass(self.name)
-
+                for si in range_.staticinterfaces.filter(dhcp_enabled=True):
+                    build_str += si.build_subclass(self.name)
 
         return build_str
 
