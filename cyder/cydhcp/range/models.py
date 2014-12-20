@@ -83,22 +83,25 @@ class Range(BaseModel, ViewMixin, ObjectUrlMixin):
 
     end_lower = models.BigIntegerField(null=True, editable=False)
     end_upper = models.BigIntegerField(null=True, editable=False)
-    end_str = models.CharField(max_length=39, verbose_name="End address",
-            )
+    end_str = CharField(
+        max_length=39, verbose_name="End address", charset='ascii',
+        collation='ascii_bin')
 
     domain = models.ForeignKey(Domain, null=True, blank=True,
                                limit_choices_to={'is_reverse': False})
 
     is_reserved = models.BooleanField(default=False, blank=False)
 
-    allow = models.CharField(max_length=1, choices=ALLOW_OPTIONS,
-                             default=ALLOW_LEGACY)
+    allow = CharField(
+        max_length=1, choices=ALLOW_OPTIONS, default=ALLOW_LEGACY,
+        charset='ascii', collation='ascii_bin')
 
-    dhcpd_raw_include = models.TextField(blank=True)
+    dhcpd_raw_include = TextField(
+        blank=True, charset='ascii', collation='ascii_bin')
     dhcp_enabled = models.BooleanField(default=True)
 
-    name = models.CharField(blank=True, max_length=50)
-    description = models.TextField(blank=True)
+    name = CharField(blank=True, max_length=50)
+    description = TextField(blank=True)
 
     allow_voip_phones = models.BooleanField(
         default=True, verbose_name='Allow VoIP phones')
