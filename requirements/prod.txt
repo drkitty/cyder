@@ -17,13 +17,11 @@ anyjson==0.3
 async==0.6.1
 Babel==0.9.6
 carrot==0.10.7
-celery==2.1.4
 certifi==0.0.8
 chardet==1.0.1
 python-dateutil==1.5
 Django==1.4.1
 django-browserid==0.6
-django-celery==2.1.4
 GitPython==0.1.7
 gitdb==0.5.2
 html5lib==0.90

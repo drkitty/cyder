@@ -344,7 +344,6 @@ INSTALLED_APPS = [
 
     # Third-party apps, patches, fixes
     'commonware.response.cookies',
-    'djcelery',
     'django_nose',
     'session_csrf',
 
@@ -357,7 +356,6 @@ INSTALLED_APPS = [
     # Third party apps
     'south',
     'django_cas',
-    'djcelery',
     'django_extensions',
     'django_nose',
     'jingo_minify',
