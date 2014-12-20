@@ -1,5 +1,6 @@
 from django.db import models
 
+from cyder.base.fields import CharField
 from cyder.base.mixins import ObjectUrlMixin
 
 
@@ -9,7 +10,8 @@ class View(models.Model):
     """
 
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255)
+    name = CharField(max_length=255, charset='ascii',
+                     collation='ascii_general_ci')
 
     sort_fields = ('name',)
 

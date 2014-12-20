@@ -5,6 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from cyder.base.eav.constants import ATTRIBUTE_INVENTORY
 from cyder.base.eav.fields import EAVAttributeField
 from cyder.base.eav.models import Attribute, EAVBase
+from cyder.base.fields import CharField
 from cyder.base.mixins import ObjectUrlMixin
 from cyder.base.models import BaseModel
 from cyder.base.validators import validate_positive_integer_field
@@ -21,7 +22,8 @@ class Vlan(BaseModel, ObjectUrlMixin):
     pretty_type = 'VLAN'
 
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255)
+    name = CharField(
+        max_length=255, charset='ascii', collation='ascii_general_ci')
     number = models.PositiveIntegerField(
         validators=[validate_positive_integer_field])
 

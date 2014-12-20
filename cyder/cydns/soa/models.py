@@ -10,6 +10,7 @@ from django.db import models, transaction
 from cyder.base.eav.constants import ATTRIBUTE_INVENTORY
 from cyder.base.eav.fields import EAVAttributeField
 from cyder.base.eav.models import Attribute, EAVBase
+from cyder.base.fields import CharField
 from cyder.base.mixins import ObjectUrlMixin, DisplayMixin
 from cyder.base.models import BaseModel
 from cyder.base.validators import validate_positive_integer_field
@@ -59,8 +60,12 @@ class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
     ttl = models.PositiveIntegerField(default=3600, blank=True, null=True,
                                       validators=[validate_ttl],
                                       verbose_name="Time to live")
-    primary = models.CharField(max_length=100, validators=[validate_fqdn])
-    contact = models.CharField(max_length=100, validators=[validate_fqdn])
+    primary = CharField(
+        max_length=100, validators=[validate_fqdn], charset='ascii',
+        collation='ascii_general_ci')
+    contact = CharField(
+        max_length=100, validators=[validate_fqdn], charset='ascii',
+        collation='ascii_general_ci')
     serial = models.PositiveIntegerField(
         null=False, default=int(time.time()),
         validators=[validate_positive_integer_field])
@@ -80,7 +85,7 @@ class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
     minimum = models.PositiveIntegerField(
         null=False, default=DEFAULT_MINIMUM,
         validators=[validate_positive_integer_field])
-    description = models.CharField(max_length=200, blank=True)
+    description = CharField(max_length=200, blank=True)
     root_domain = models.ForeignKey("cyder.Domain", null=False, unique=True,
                                     related_name="root_of_soa")
     # This indicates if this SOA's zone needs to be rebuilt

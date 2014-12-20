@@ -1,5 +1,7 @@
 from django.db import models
 
+from cyder.base.fields import CharField
+
 
 class DNSManager(models.Manager):
     def get_queryset(self):
@@ -7,8 +9,10 @@ class DNSManager(models.Manager):
 
 
 class Task(models.Model):
-    task = models.CharField(max_length=255, blank=False)
-    ttype = models.CharField(max_length=255, blank=False)
+    task = CharField(max_length=255, blank=False, charset='ascii',
+                     collation='ascii_general_ci')
+    ttype = CharField(max_length=255, blank=False, charset='ascii',
+                      collation='ascii_bin')
 
     objects = models.Manager()
     dns = DNSManager()
@@ -18,11 +22,11 @@ class Task(models.Model):
         db_table = u'task'
         ordering = ['task']
 
-    def __repr__(self):
-        return "<Task: {0}>".format(self)
+    def __unicode__(self):
+        return "{0} {1}".format(self.ttype, self.task)
 
     def __str__(self):
-        return "{0} {1}".format(self.ttype, self.task)
+        return unicode(self).encode('ascii', 'replace')
 
     def save(self):
         super(Task, self).save()

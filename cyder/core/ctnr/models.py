@@ -3,6 +3,7 @@ from django.db import models
 from django.db.models import Q
 
 from cyder.base.constants import LEVELS
+from cyder.base.fields import CharField
 from cyder.base.mixins import ObjectUrlMixin
 from cyder.base.models import BaseModel
 from cyder.base.validators import validate_integer_field
@@ -18,15 +19,16 @@ class Ctnr(BaseModel, ObjectUrlMixin):
     pretty_type = 'container'
 
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100, unique=True,
-                            validators=[validate_ctnr_name])
+    name = CharField(max_length=100, unique=True, charset='ascii',
+                     collation='ascii_general_ci',
+                     validators=[validate_ctnr_name])
     users = models.ManyToManyField(User, null=False, related_name='ctnrs',
                                    through='CtnrUser', blank=True)
     domains = models.ManyToManyField(Domain, null=False, blank=True)
     ranges = models.ManyToManyField(Range, null=False, blank=True)
     workgroups = models.ManyToManyField(Workgroup, null=False, blank=True)
-    description = models.CharField(max_length=200, blank=True)
-    email_contact = models.CharField(max_length=75, blank=True)
+    description = CharField(max_length=200, blank=True)
+    email_contact = CharField(max_length=75, blank=True)
 
     search_fields = ('name', 'description')
     sort_fields = ('name',)

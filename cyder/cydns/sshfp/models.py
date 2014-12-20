@@ -4,6 +4,7 @@ from gettext import gettext as _
 from django.db import models
 from django.core.exceptions import ValidationError
 
+from cyder.base.fields import CharField
 from cyder.base.utils import transaction_atomic
 from cyder.cydns.models import CydnsRecord, LabelDomainMixin
 
@@ -25,7 +26,9 @@ class SSHFP(LabelDomainMixin, CydnsRecord):
     pretty_type = 'SSHFP'
 
     id = models.AutoField(primary_key=True)
-    key = models.CharField(max_length=256, validators=[validate_sha1])
+    key = CharField(
+        max_length=256, validators=[validate_sha1], charset='ascii',
+        collation='ascii_general_ci')
     algorithm_number = models.PositiveIntegerField(
         null=False, blank=False, choices=((1, 'RSA (1)'), (2, 'DSA (2)')),
         verbose_name='algorithm')

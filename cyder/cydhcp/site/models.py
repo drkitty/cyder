@@ -5,6 +5,7 @@ from django.core.validators import RegexValidator
 from cyder.base.eav.constants import ATTRIBUTE_INVENTORY
 from cyder.base.eav.fields import EAVAttributeField
 from cyder.base.eav.models import Attribute, EAVBase
+from cyder.base.fields import CharField
 from cyder.base.mixins import ObjectUrlMixin
 from cyder.base.models import BaseModel
 from cyder.base.utils import transaction_atomic
@@ -13,8 +14,8 @@ from cyder.cydhcp.utils import networks_to_Q
 
 class Site(BaseModel, ObjectUrlMixin):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255,
-                            validators=[RegexValidator('^[^/]+$')])
+    name = CharField(max_length=255, validators=[RegexValidator('^[^/]+$')],
+                     charset='ascii', collation='ascii_general_ci')
     parent = models.ForeignKey("self", null=True, blank=True,
                                verbose_name="Parent site")
 

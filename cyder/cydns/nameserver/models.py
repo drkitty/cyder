@@ -4,6 +4,7 @@ from gettext import gettext as _
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import models
 
+from cyder.base.fields import CharField
 from cyder.base.utils import transaction_atomic
 from cyder.core.ctnr.models import Ctnr
 from cyder.cydhcp.interface.static_intr.models import StaticInterface
@@ -38,9 +39,10 @@ class Nameserver(CydnsRecord):
     id = models.AutoField(primary_key=True)
     domain = models.ForeignKey(Domain, null=False, help_text="The domain this "
                                "record is for.")
-    server = models.CharField(max_length=255, validators=[validate_fqdn],
-                              help_text="The name of the server this records "
-                              "points to.")
+    server = CharField(
+        max_length=255, validators=[validate_fqdn],
+        help_text="The name of the server this records points to.",
+        charset='ascii', collation='ascii_general_ci')
     # "If the name server does lie within the domain it should have a
     # corresponding A record."
     addr_glue = models.ForeignKey(AddressRecord, null=True, blank=True,

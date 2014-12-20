@@ -5,6 +5,7 @@ from django.db.models.loading import get_model
 from cyder.base.eav.constants import ATTRIBUTE_INVENTORY
 from cyder.base.eav.fields import EAVAttributeField
 from cyder.base.eav.models import Attribute, EAVBase
+from cyder.base.fields import CharField
 from cyder.base.mixins import ObjectUrlMixin
 from cyder.base.models import BaseModel
 from cyder.base.utils import transaction_atomic
@@ -12,9 +13,10 @@ from cyder.core.system.validators import validate_no_spaces
 
 
 class System(BaseModel, ObjectUrlMixin):
-    name = models.CharField(
+    name = CharField(
         max_length=255, unique=False, null=False, blank=False,
-        validators=[validate_no_spaces])
+        validators=[validate_no_spaces], charset='ascii',
+        collation='ascii_general_ci')
 
     search_fields = ('name',)
     sort_fields = ('name',)

@@ -26,11 +26,11 @@ def _post_syncdb(**kwargs):
     from cyder.settings import TESTING
 
     if TESTING and kwargs['sender'].__name__ == 'cyder.models':
-        _load_custom_sql()
+        #_load_custom_sql()
         _load_fixtures()
 
 
 @receiver(post_migrate)
 def _post_migrate(**kwargs):
-    _load_custom_sql()
+    #_load_custom_sql()
     _load_fixtures()

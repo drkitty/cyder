@@ -5,14 +5,15 @@ from django.db.models.loading import get_model
 from django.core.exceptions import ValidationError
 from ipaddr import AddressValueError, IPv4Address, IPv6Address
 
-from cyder.base.utils import transaction_atomic
-from cyder.base.models import BaseModel
+from cyder.base.fields import CharField
 from cyder.base.mixins import DisplayMixin, ObjectUrlMixin
+from cyder.base.models import BaseModel
+from cyder.base.utils import transaction_atomic
 from cyder.cydhcp.range.utils import find_range
-from cyder.cydns.models import ViewMixin
+from cyder.cydns.cname.models import CNAME
 from cyder.cydns.domain.models import Domain, name_to_domain
 from cyder.cydns.ip.models import Ip
-from cyder.cydns.cname.models import CNAME
+from cyder.cydns.models import ViewMixin
 from cyder.cydns.validation import validate_fqdn, validate_ttl
 from cyder.cydns.view.validation import check_no_ns_soa_condition
 
@@ -149,13 +150,14 @@ class PTR(BaseModel, BasePTR, Ip, ViewMixin, DisplayMixin, ObjectUrlMixin):
     id = models.AutoField(primary_key=True)
     reverse_domain = models.ForeignKey(Domain, null=False, blank=True,
                                        related_name='reverse_ptr_set')
-    fqdn = models.CharField(
-        max_length=255, blank=True, validators=[validate_fqdn], db_index=True
+    fqdn = CharField(
+        max_length=255, blank=True, validators=[validate_fqdn], db_index=True,
+        charset='ascii', collation='ascii_general_ci',
     )
-    ttl = models.PositiveIntegerField(default=3600, blank=True, null=True,
-                                      validators=[validate_ttl],
-                                      verbose_name="Time to live")
-    description = models.CharField(max_length=1000, blank=True)
+    ttl = models.PositiveIntegerField(
+        default=3600, blank=True, null=True, validators=[validate_ttl],
+        verbose_name="Time to live")
+    description = CharField(max_length=1000, blank=True)
     ctnr = models.ForeignKey("cyder.Ctnr", null=False,
                              verbose_name="Container")
 

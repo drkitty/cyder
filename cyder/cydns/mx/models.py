@@ -3,6 +3,7 @@ from gettext import gettext as _
 from django.db import models
 from django.core.exceptions import ValidationError
 
+from cyder.base.fields import CharField
 from cyder.base.utils import transaction_atomic
 from cyder.cydns.cname.models import CNAME
 from cyder.cydns.models import CydnsRecord, LabelDomainMixin
@@ -14,9 +15,11 @@ class MX(LabelDomainMixin, CydnsRecord):
 
     id = models.AutoField(primary_key=True)
     # The mail server this record should point to.
-    server = models.CharField(max_length=100, validators=[validate_fqdn],
-                              help_text="The name of the mail server this "
-                              "record points to.")
+    server = CharField(
+        max_length=100, validators=[validate_fqdn],
+        help_text="The name of the mail server this record points to.",
+        charset='ascii', collation='ascii_general_ci',
+    )
     priority = models.PositiveIntegerField(null=False,
                                            validators=[validate_mx_priority])
     template = _("{bind_name:$lhs_just} {ttl:$ttl_just}  "

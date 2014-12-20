@@ -7,6 +7,7 @@ from cyder.base.constants import IP_TYPES, IP_TYPE_4, IP_TYPE_6
 from cyder.base.eav.constants import ATTRIBUTE_OPTION, ATTRIBUTE_STATEMENT
 from cyder.base.eav.fields import EAVAttributeField
 from cyder.base.eav.models import Attribute, EAVBase
+from cyder.base.fields import CharField, TextField
 from cyder.base.mixins import ObjectUrlMixin
 from cyder.base.models import BaseModel
 from cyder.base.utils import transaction_atomic
@@ -31,23 +32,24 @@ class Network(BaseModel, ObjectUrlMixin):
                             default=1)  # "Legacy"
 
     # NETWORK/NETMASK FIELDS
-    ip_type = models.CharField(
+    ip_type = CharField(
         verbose_name='IP address type', max_length=1,
         choices=IP_TYPES.items(), default=IP_TYPE_4,
-        validators=[validate_ip_type]
-    )
+        validators=[validate_ip_type], charset='ascii',
+        collation='ascii_bin')
     ip_upper = models.BigIntegerField(null=False, blank=True)
     ip_lower = models.BigIntegerField(null=False, blank=True)
     # This field is here so ES can search this model easier.
-    network_str = models.CharField(
+    network_str = CharField(
         max_length=49, editable=True,
         help_text='Network address and prefix length, in CIDR notation',
-        verbose_name='Network string')
+        verbose_name='Network string', charset='ascii',
+        collation='ascii_bin')
     prefixlen = models.PositiveIntegerField(
         null=False, help_text="The number of binary 1's in the netmask.")
     enabled = models.BooleanField(default=True)
-    dhcpd_raw_include = models.TextField(
-        blank=True,
+    dhcpd_raw_include = TextField(
+        blank=True, charset='ascii', collation='ascii_bin',
         help_text="The config options in this box will be included "
                   "*as is* in the dhcpd.conf file for this subnet.")
     network = None

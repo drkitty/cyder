@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 
+from cyder.base.fields import CharField
 from cyder.base.mixins import ObjectUrlMixin
 from cyder.base.models import BaseModel
 from cyder.base.utils import transaction_atomic
@@ -73,8 +74,9 @@ class Domain(BaseModel, ObjectUrlMixin):
     """
 
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255, unique=True,
-                            validators=[validate_domain_name])
+    name = CharField(max_length=255, unique=True,
+                     validators=[validate_domain_name],
+                     charset='ascii', collation='ascii_general_ci')
     master_domain = models.ForeignKey("self", null=True,
                                       default=None, blank=True)
     soa = models.ForeignKey("cyder.SOA", null=True, default=None,

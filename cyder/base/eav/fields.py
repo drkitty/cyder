@@ -6,9 +6,10 @@ from south.modelsinspector import add_introspection_rules
 from cyder.base.eav import validators
 from cyder.base.eav.constants import (ATTRIBUTE_TYPES, ATTRIBUTE_INVENTORY,
                                       ATTRIBUTE_OPTION, ATTRIBUTE_STATEMENT)
+from cyder.base.fields import CharField
 
 
-class AttributeValueTypeField(models.CharField):
+class AttributeValueTypeField(CharField):
     """
     This field represents the attribute value type -- in other words, the
     type of data the EAV value is allowed to hold. It names a validator defined
@@ -28,6 +29,8 @@ class AttributeValueTypeField(models.CharField):
             raise Exception("The 'attribute_type_field' argument is required")
 
         kwargs['blank'] = False # always run validate()
+        kwargs['charset'] = 'ascii'
+        kwargs['collation'] = 'ascii_bin'
 
         super(AttributeValueTypeField, self).__init__(*args, **kwargs)
 
@@ -58,7 +61,7 @@ class AttributeValueTypeField(models.CharField):
                                                           model_instance)
 
 
-class EAVValueField(models.CharField):
+class EAVValueField(CharField):
     """
     This field represents an EAV value. It strips leading and trailing
     whitespace and validates using the validator function specified in
@@ -74,6 +77,9 @@ class EAVValueField(models.CharField):
         self.attribute_field = kwargs.pop('attribute_field', None)
         if self.attribute_field is None:
             raise Exception("The 'attribute_field' argument is required")
+
+        kwargs['charset'] = 'ascii'
+        kwargs['collation'] = 'ascii_bin'
 
         super(EAVValueField, self).__init__(*args, **kwargs)
 

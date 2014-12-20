@@ -5,6 +5,7 @@ from django.db import models
 from cyder.base.eav.constants import ATTRIBUTE_OPTION, ATTRIBUTE_STATEMENT
 from cyder.base.eav.fields import EAVAttributeField
 from cyder.base.eav.models import Attribute, EAVBase
+from cyder.base.fields import CharField
 from cyder.base.mixins import ObjectUrlMixin
 from cyder.base.models import BaseModel
 from cyder.base.utils import transaction_atomic
@@ -13,7 +14,8 @@ from cyder.cydhcp.utils import join_dhcp_args
 
 class Workgroup(BaseModel, ObjectUrlMixin):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100, unique=True)
+    name = CharField(max_length=100, unique=True,
+                     charset='ascii', collation='ascii_general_ci')
 
     search_fields = ('name',)
     sort_fields = ('name',)

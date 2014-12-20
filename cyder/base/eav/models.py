@@ -5,6 +5,7 @@ from cyder.base.eav.constants import (ATTRIBUTE_TYPES, ATTRIBUTE_INVENTORY,
 from cyder.base.eav.fields import AttributeValueTypeField, EAVValueField
 from cyder.base.eav.utils import is_hex_byte_sequence
 from cyder.base.eav.validators import VALUE_TYPES
+from cyder.base.fields import CharField
 from cyder.base.mixins import ObjectUrlMixin
 from cyder.base.models import BaseModel
 from cyder.base.utils import classproperty, transaction_atomic
@@ -17,10 +18,14 @@ class Attribute(models.Model):
         app_label = 'cyder'
         db_table = 'attribute'
 
-    name = models.CharField(max_length=255)
-    attribute_type = models.CharField(max_length=1, choices=ATTRIBUTE_TYPES)
-    value_type = AttributeValueTypeField(max_length=20, choices=VALUE_TYPES,
-                                         attribute_type_field='attribute_type')
+    name = CharField(
+        max_length=255, charset='ascii', collation='ascii_general_ci')
+    attribute_type = CharField(
+        max_length=1, choices=ATTRIBUTE_TYPES, charset='ascii',
+        collation='ascii_general_ci')
+    value_type = AttributeValueTypeField(
+        max_length=20, choices=VALUE_TYPES,
+        attribute_type_field='attribute_type')
 
     def __unicode__(self):
         return self.name

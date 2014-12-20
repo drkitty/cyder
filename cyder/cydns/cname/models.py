@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models import get_model
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
+from cyder.base.fields import CharField
 from cyder.base.utils import transaction_atomic
 from cyder.cydns.models import CydnsRecord, LabelDomainMixin
 from cyder.cydns.validation import validate_fqdn
@@ -28,7 +29,9 @@ class CNAME(LabelDomainMixin, CydnsRecord):
 
     # TODO cite an RFC for that ^ (it's around somewhere)
     id = models.AutoField(primary_key=True)
-    target = models.CharField(max_length=100, validators=[validate_fqdn])
+    target = CharField(
+        max_length=100, validators=[validate_fqdn], charset='ascii',
+        collation='ascii_general_ci')
     template = _("{bind_name:$lhs_just} {ttl:$ttl_just}  "
                  "{rdclass:$rdclass_just} "
                  "{rdtype:$rdtype_just} {target:$rhs_just}.")

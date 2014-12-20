@@ -1,12 +1,11 @@
+import ipaddr
 from django.db import models
 from django.core.exceptions import ValidationError
 
 from cyder.base.constants import IP_TYPES, IP_TYPE_6, IP_TYPE_4
+from cyder.base.fields import CharField
 from cyder.cydns.validation import validate_ip_type
-
 from cyder.cydhcp.utils import two_to_one
-
-import ipaddr
 
 
 class Ip(models.Model):
@@ -23,15 +22,17 @@ class Ip(models.Model):
         This class is abstract.
 
     """
-    ip_str = models.CharField(
-        max_length=39, editable=True, verbose_name='IP address')
+    ip_str = CharField(
+        max_length=39, editable=True, verbose_name='IP address',
+        charset='ascii', collation='ascii_general_ci')
     # ip_upper/lower are calculated from ip_str on clean_ip.
     ip_upper = models.BigIntegerField(null=True, blank=True)
     ip_lower = models.BigIntegerField(null=True, blank=True)
-    ip_type = models.CharField(
+    ip_type = CharField(
         verbose_name='IP address type', max_length=1,
         choices=IP_TYPES.items(), default=IP_TYPE_4,
-        validators=[validate_ip_type]
+        validators=[validate_ip_type], charset='ascii',
+        collation='ascii_general_ci',
     )
 
     class Meta:

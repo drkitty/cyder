@@ -7,6 +7,7 @@ from cyder.base.constants import IP_TYPES, IP_TYPE_4, IP_TYPE_6
 from cyder.base.eav.constants import ATTRIBUTE_OPTION, ATTRIBUTE_STATEMENT
 from cyder.base.eav.fields import EAVAttributeField
 from cyder.base.eav.models import Attribute, EAVBase
+from cyder.base.fields import CharField, TextField
 from cyder.base.mixins import ObjectUrlMixin
 from cyder.base.models import BaseModel
 from cyder.base.utils import simple_descriptor, transaction_atomic
@@ -64,22 +65,26 @@ class Range(BaseModel, ViewMixin, ObjectUrlMixin):
     id = models.AutoField(primary_key=True)
     network = models.ForeignKey(Network, null=False, blank=False)
 
-    range_type = models.CharField(max_length=2, choices=RANGE_TYPE,
-                                  default=STATIC)
+    range_type = CharField(
+        max_length=2, choices=RANGE_TYPE, default=STATIC,
+        charset='ascii', collation='ascii_bin')
 
-    ip_type = models.CharField(
+    ip_type = CharField(
         verbose_name='IP address type', max_length=1,
         choices=IP_TYPES.items(), default=IP_TYPE_4,
-        validators=[validate_ip_type]
-    )
+        validators=[validate_ip_type], charset='ascii',
+        collation='ascii_bin')
 
     start_upper = models.BigIntegerField(null=True, editable=False)
     start_lower = models.BigIntegerField(null=True, editable=False)
-    start_str = models.CharField(max_length=39, verbose_name="Start address")
+    start_str = CharField(
+        max_length=39, verbose_name="Start address", charset='ascii',
+        collation='ascii_bin')
 
     end_lower = models.BigIntegerField(null=True, editable=False)
     end_upper = models.BigIntegerField(null=True, editable=False)
-    end_str = models.CharField(max_length=39, verbose_name="End address")
+    end_str = models.CharField(max_length=39, verbose_name="End address",
+            )
 
     domain = models.ForeignKey(Domain, null=True, blank=True,
                                limit_choices_to={'is_reverse': False})

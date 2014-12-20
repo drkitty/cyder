@@ -3,6 +3,7 @@ from string import Template
 
 from django.db import models
 
+from cyder.base.fields import TextField
 from cyder.base.utils import transaction_atomic
 from cyder.cydns.models import CydnsRecord, LabelDomainMixin
 from cyder.cydns.validation import validate_txt_data
@@ -15,9 +16,10 @@ class TXT(LabelDomainMixin, CydnsRecord):
     pretty_type = 'TXT'
 
     id = models.AutoField(primary_key=True)
-    txt_data = models.TextField(
+    txt_data = TextField(
         help_text="The text data for this record.",
-        validators=[validate_txt_data]
+        validators=[validate_txt_data], charset='ascii',
+        collation='ascii_general_ci',
     )
 
     search_fields = ("fqdn", "txt_data")

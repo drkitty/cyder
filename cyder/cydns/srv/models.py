@@ -2,6 +2,7 @@ from gettext import gettext as _
 
 from django.db import models
 
+from cyder.base.fields import CharField
 from cyder.base.utils import transaction_atomic
 from cyder.cydns.domain.models import Domain
 from cyder.cydns.models import CydnsRecord, LabelDomainUtilsMixin
@@ -20,16 +21,19 @@ class SRV(CydnsRecord, LabelDomainUtilsMixin):
     pretty_type = 'SRV'
 
     id = models.AutoField(primary_key=True)
-    label = models.CharField(max_length=63, blank=True,
-                             validators=[validate_srv_label],
-                             help_text="Short name of the FQDN")
+    label = CharField(
+        max_length=63, blank=True, validators=[validate_srv_label],
+        help_text="Short name of the FQDN", charset='ascii',
+        collation='ascii_general_ci')
     domain = models.ForeignKey(Domain, null=False,
                                limit_choices_to={'is_reverse': False})
-    fqdn = models.CharField(max_length=255, blank=True,
-                            validators=[validate_srv_name])
+    fqdn = CharField(
+        max_length=255, blank=True, validators=[validate_srv_name],
+        charset='ascii', collation='ascii_general_ci')
 
-    target = models.CharField(max_length=100,
-                              validators=[validate_srv_target], blank=True)
+    target = CharField(
+        max_length=100, validators=[validate_srv_target], blank=True,
+        charset='ascii', collation='ascii_general_ci')
 
     port = models.PositiveIntegerField(null=False,
                                        validators=[validate_srv_port])

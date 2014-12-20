@@ -1,9 +1,46 @@
 from django import forms
-from django.db.models import CharField, NOT_PROVIDED, SubfieldBase
+from django.db import models
+from django.db.models import CharField, SubfieldBase
 from django.core.exceptions import ValidationError
 from south.modelsinspector import add_introspection_rules
 
 from cyder.cydhcp.validation import validate_mac
+
+
+class CharField(models.CharField):
+    def __init__(self, *args, **kwargs):
+        self.charset = kwargs.pop('charset', 'utf8mb4')
+        self.collation = kwargs.pop('collation', 'utf8mb4_general_ci')
+
+        return super(CharField, self).__init__(*args, **kwargs)
+
+    def db_type(self, connection):
+        if connection.settings_dict['ENGINE'] == 'django.db.backends.mysql':
+            return (
+                super(CharField, self).db_type(connection) +
+                ' CHARACTER SET {} COLLATE {}'.format(
+                    self.charset, self.collation)
+            )
+        else:
+            raise Exception('Database backend not supported')
+
+
+class TextField(models.TextField):
+    def __init__(self, *args, **kwargs):
+        self.charset = kwargs.pop('charset', 'utf8mb4')
+        self.collation = kwargs.pop('collation', 'utf8mb4_general_ci')
+
+        return super(TextField, self).__init__(*args, **kwargs)
+
+    def db_type(self, connection):
+        if connection.settings_dict['ENGINE'] == 'django.db.backends.mysql':
+            return (
+                super(TextField, self).db_type(connection) +
+                ' CHARACTER SET {} COLLATE {}'.format(
+                    self.charset, self.collation)
+            )
+        else:
+            raise Exception('Database backend not supported')
 
 
 class MacAddrField(CharField):
@@ -19,7 +56,7 @@ class MacAddrField(CharField):
         not specified, always validate.
     """
 
-    __metaclass__ = SubfieldBase
+    __metaclass__ = models.SubfieldBase
 
     def __init__(self, *args, **kwargs):
         self.dhcp_enabled = kwargs.pop('dhcp_enabled', True)
@@ -27,6 +64,8 @@ class MacAddrField(CharField):
         kwargs['max_length'] = 17
         kwargs['blank'] = False  # always call MacAddrField.clean
         kwargs['null'] = True
+        kwargs['charset'] = 'ascii'
+        kwargs['collation'] = 'ascii_general_ci'
 
         super(MacAddrField, self).__init__(*args, **kwargs)
 
@@ -84,8 +123,22 @@ class MacAddrField(CharField):
 
 add_introspection_rules([
     (
+        [CharField],  # model
+        [],  # args
+        {'charset': ('charset', {}), 'collation': ('collation', {})},  # kwargs
+    ),
+    (
+        [TextField],  # model
+        [],  # args
+        {'charset': ('charset', {}), 'collation': ('collation', {})},  # kwargs
+    ),
+    (
         [MacAddrField], # model
         [], # args
         {'dhcp_enabled': ('dhcp_enabled', {})}, # kwargs
     )
-], [r'^cyder\.base\.fields\.MacAddrField'])
+], [
+    r'^cyder\.base\.fields\.CharField',
+    r'^cyder\.base\.fields\.TextField',
+    r'^cyder\.base\.fields\.MacAddrField',
+])

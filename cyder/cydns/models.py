@@ -2,12 +2,13 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import get_model
 
+from cyder.base.fields import CharField
 from cyder.base.models import BaseModel
-from cyder.cydns.domain.models import Domain
 from cyder.base.mixins import ObjectUrlMixin, DisplayMixin
+from cyder.cydns.domain.models import Domain
+from cyder.cydns.validation import (
+    validate_first_label, validate_fqdn, validate_ttl)
 from cyder.cydns.view.models import View
-from cyder.cydns.validation import validate_first_label, validate_fqdn
-from cyder.cydns.validation import validate_ttl
 from cyder.cydns.view.validation import check_no_ns_soa_condition
 
 
@@ -85,12 +86,14 @@ class LabelDomainMixin(LabelDomainUtilsMixin):
         Domain, null=False, limit_choices_to={'is_reverse': False})
     # "The length of any one label is limited to between 1 and 63 octets."
     # -- RFC218
-    label = models.CharField(
+    label = CharField(
         max_length=63, blank=True, validators=[validate_first_label],
-        help_text="Short name of the FQDN",
+        help_text="Short name of the FQDN", charset='ascii',
+        collation='ascii_general_ci',
     )
-    fqdn = models.CharField(
-        max_length=255, blank=True, validators=[validate_fqdn], db_index=True
+    fqdn = CharField(
+        max_length=255, blank=True, validators=[validate_fqdn], db_index=True,
+        charset='ascii', collation='ascii_general_ci',
     )
 
 
@@ -122,7 +125,7 @@ class CydnsRecord(BaseModel, ViewMixin, DisplayMixin, ObjectUrlMixin):
     ttl = models.PositiveIntegerField(default=3600, blank=True, null=True,
                                       validators=[validate_ttl],
                                       verbose_name="Time to live")
-    description = models.CharField(max_length=1000, blank=True)
+    description = CharField(max_length=1000, blank=True)
     ctnr = models.ForeignKey("cyder.Ctnr", null=False,
                              verbose_name="Container")
 
