@@ -6,23 +6,19 @@ from django.core.exceptions import ValidationError
 import datetime
 import re
 
-from cyder.core.fields import MacAddrField
-
-from cyder.core.system.models import System
-
 from cyder.base.constants import IP_TYPE_6
 from cyder.base.eav.constants import (ATTRIBUTE_OPTION, ATTRIBUTE_STATEMENT,
                                       ATTRIBUTE_INVENTORY)
 from cyder.base.eav.fields import EAVAttributeField
 from cyder.base.eav.models import Attribute, EAVBase
+from cyder.base.fields import MacAddrField
 from cyder.base.models import ExpirableMixin
 from cyder.base.utils import transaction_atomic
-
+from cyder.core.system.models import System
 from cyder.cydhcp.constants import STATIC
 from cyder.cydhcp.range.utils import find_range
 from cyder.cydhcp.utils import format_mac, join_dhcp_args
 from cyder.cydhcp.workgroup.models import Workgroup
-
 from cyder.cydns.ptr.models import BasePTR, PTR
 from cyder.cydns.address_record.models import AddressRecord, BaseAddressRecord
 from cyder.cydns.ip.utils import ip_to_reverse_name
@@ -30,19 +26,12 @@ from cyder.cydns.domain.models import Domain
 
 
 class StaticInterface(BaseAddressRecord, BasePTR, ExpirableMixin):
-    # Keep in mind that BaseAddressRecord will have it's methods called before
-    # BasePTR
-    """The StaticInterface Class.
-
-        >>> s = StaticInterface(label=label, domain=domain, ip_str=ip_str,
-        ... ip_type=ip_type, dhcp_enabled=True, dns_enabled=True)
-        >>> s.save()
-
+    """
     This class is the main interface to DNS and DHCP. A static
     interface consists of three key pieces of information: IP address, MAC
     address, and hostname (the hostname is comprised of a label and a domain).
     From these three pieces of information, three things are ensured: An A or
-    AAAA DNS record, a PTR record, and a `host` statement in the DHCP builds
+    AAAA DNS record, a PTR record, and a `host` declaration in the DHCP builds
     that grants the MAC address of the interface the correct IP address and
     hostname.
 
