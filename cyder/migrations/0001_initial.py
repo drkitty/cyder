@@ -48,7 +48,7 @@ class Migration(SchemaMigration):
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, null=True, blank=True)),
             ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, null=True, blank=True)),
-            ('name', self.gf('cyder.base.fields.CharField')(collation='ascii_general_ci', max_length=255, charset='ascii')),
+            ('name', self.gf('cyder.base.fields.CharField')(collation='utf8mb4_general_ci', max_length=255, charset='utf8mb4')),
         ))
         db.send_create_signal('cyder', ['System'])
 
@@ -57,7 +57,7 @@ class Migration(SchemaMigration):
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, null=True, blank=True)),
             ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, null=True, blank=True)),
-            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='ascii_bin', max_length=255, attribute_field='', charset='ascii')),
+            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='utf8mb4_general_ci', max_length=255, attribute_field='', charset='utf8mb4')),
             ('entity', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cyder.System'])),
             ('attribute', self.gf('cyder.base.eav.fields.EAVAttributeField')(to=orm['cyder.Attribute'])),
         ))
@@ -80,7 +80,7 @@ class Migration(SchemaMigration):
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, null=True, blank=True)),
             ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, null=True, blank=True)),
-            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='ascii_bin', max_length=255, attribute_field='', charset='ascii')),
+            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='utf8mb4_general_ci', max_length=255, attribute_field='', charset='utf8mb4')),
             ('entity', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cyder.Workgroup'])),
             ('attribute', self.gf('cyder.base.eav.fields.EAVAttributeField')(to=orm['cyder.Attribute'])),
         ))
@@ -231,7 +231,7 @@ class Migration(SchemaMigration):
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, null=True, blank=True)),
             ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, null=True, blank=True)),
-            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='ascii_bin', max_length=255, attribute_field='', charset='ascii')),
+            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='utf8mb4_general_ci', max_length=255, attribute_field='', charset='utf8mb4')),
             ('entity', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cyder.StaticInterface'])),
             ('attribute', self.gf('cyder.base.eav.fields.EAVAttributeField')(to=orm['cyder.Attribute'])),
         ))
@@ -258,7 +258,7 @@ class Migration(SchemaMigration):
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, null=True, blank=True)),
             ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, null=True, blank=True)),
-            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='ascii_bin', max_length=255, attribute_field='', charset='ascii')),
+            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='utf8mb4_general_ci', max_length=255, attribute_field='', charset='utf8mb4')),
             ('entity', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cyder.Vlan'])),
             ('attribute', self.gf('cyder.base.eav.fields.EAVAttributeField')(to=orm['cyder.Attribute'])),
         ))
@@ -281,7 +281,7 @@ class Migration(SchemaMigration):
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, null=True, blank=True)),
             ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, null=True, blank=True)),
-            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='ascii_bin', max_length=255, attribute_field='', charset='ascii')),
+            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='utf8mb4_general_ci', max_length=255, attribute_field='', charset='utf8mb4')),
             ('entity', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cyder.Vrf'])),
             ('attribute', self.gf('cyder.base.eav.fields.EAVAttributeField')(to=orm['cyder.Attribute'])),
         ))
@@ -308,7 +308,7 @@ class Migration(SchemaMigration):
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, null=True, blank=True)),
             ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, null=True, blank=True)),
-            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='ascii_bin', max_length=255, attribute_field='', charset='ascii')),
+            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='utf8mb4_general_ci', max_length=255, attribute_field='', charset='utf8mb4')),
             ('entity', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cyder.Site'])),
             ('attribute', self.gf('cyder.base.eav.fields.EAVAttributeField')(to=orm['cyder.Attribute'])),
         ))
@@ -343,7 +343,7 @@ class Migration(SchemaMigration):
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, null=True, blank=True)),
             ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, null=True, blank=True)),
-            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='ascii_bin', max_length=255, attribute_field='', charset='ascii')),
+            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='utf8mb4_general_ci', max_length=255, attribute_field='', charset='utf8mb4')),
             ('entity', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cyder.Network'])),
             ('attribute', self.gf('cyder.base.eav.fields.EAVAttributeField')(to=orm['cyder.Attribute'])),
         ))
@@ -395,7 +395,7 @@ class Migration(SchemaMigration):
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, null=True, blank=True)),
             ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, null=True, blank=True)),
-            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='ascii_bin', max_length=255, attribute_field='', charset='ascii')),
+            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='utf8mb4_general_ci', max_length=255, attribute_field='', charset='utf8mb4')),
             ('entity', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cyder.Range'])),
             ('attribute', self.gf('cyder.base.eav.fields.EAVAttributeField')(to=orm['cyder.Attribute'])),
         ))
@@ -499,7 +499,7 @@ class Migration(SchemaMigration):
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, null=True, blank=True)),
             ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, null=True, blank=True)),
-            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='ascii_bin', max_length=255, attribute_field='', charset='ascii')),
+            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='utf8mb4_general_ci', max_length=255, attribute_field='', charset='utf8mb4')),
             ('entity', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cyder.DynamicInterface'])),
             ('attribute', self.gf('cyder.base.eav.fields.EAVAttributeField')(to=orm['cyder.Attribute'])),
         ))
@@ -588,7 +588,7 @@ class Migration(SchemaMigration):
             ('ttl', self.gf('django.db.models.fields.PositiveIntegerField')(default=3600, null=True, blank=True)),
             ('primary', self.gf('cyder.base.fields.CharField')(collation='ascii_general_ci', max_length=100, charset='ascii')),
             ('contact', self.gf('cyder.base.fields.CharField')(collation='ascii_general_ci', max_length=100, charset='ascii')),
-            ('serial', self.gf('django.db.models.fields.PositiveIntegerField')(default=1419119427)),
+            ('serial', self.gf('django.db.models.fields.PositiveIntegerField')(default=1419133693)),
             ('expire', self.gf('django.db.models.fields.PositiveIntegerField')(default=1209600)),
             ('retry', self.gf('django.db.models.fields.PositiveIntegerField')(default=86400)),
             ('refresh', self.gf('django.db.models.fields.PositiveIntegerField')(default=180)),
@@ -606,7 +606,7 @@ class Migration(SchemaMigration):
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, null=True, blank=True)),
             ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, null=True, blank=True)),
-            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='ascii_bin', max_length=255, attribute_field='', charset='ascii')),
+            ('value', self.gf('cyder.base.eav.fields.EAVValueField')(collation='utf8mb4_general_ci', max_length=255, attribute_field='', charset='utf8mb4')),
             ('entity', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cyder.SOA'])),
             ('attribute', self.gf('cyder.base.eav.fields.EAVAttributeField')(to=orm['cyder.Attribute'])),
         ))
@@ -1076,7 +1076,7 @@ class Migration(SchemaMigration):
             'entity': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cyder.DynamicInterface']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'null': 'True', 'blank': 'True'}),
-            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'ascii_bin'", 'max_length': '255', 'attribute_field': "''", 'charset': "'ascii'"})
+            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'utf8mb4_general_ci'", 'max_length': '255', 'attribute_field': "''", 'charset': "'utf8mb4'"})
         },
         'cyder.mx': {
             'Meta': {'unique_together': "(('domain', 'label', 'server'),)", 'object_name': 'MX', 'db_table': "'mx'"},
@@ -1130,7 +1130,7 @@ class Migration(SchemaMigration):
             'entity': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cyder.Network']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'null': 'True', 'blank': 'True'}),
-            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'ascii_bin'", 'max_length': '255', 'attribute_field': "''", 'charset': "'ascii'"})
+            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'utf8mb4_general_ci'", 'max_length': '255', 'attribute_field': "''", 'charset': "'utf8mb4'"})
         },
         'cyder.ptr': {
             'Meta': {'unique_together': "(('ip_str', 'ip_type', 'fqdn'),)", 'object_name': 'PTR', 'db_table': "'ptr'"},
@@ -1180,7 +1180,7 @@ class Migration(SchemaMigration):
             'entity': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cyder.Range']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'null': 'True', 'blank': 'True'}),
-            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'ascii_bin'", 'max_length': '255', 'attribute_field': "''", 'charset': "'ascii'"})
+            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'utf8mb4_general_ci'", 'max_length': '255', 'attribute_field': "''", 'charset': "'utf8mb4'"})
         },
         'cyder.site': {
             'Meta': {'unique_together': "(('name', 'parent'),)", 'object_name': 'Site', 'db_table': "'site'"},
@@ -1197,7 +1197,7 @@ class Migration(SchemaMigration):
             'entity': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cyder.Site']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'null': 'True', 'blank': 'True'}),
-            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'ascii_bin'", 'max_length': '255', 'attribute_field': "''", 'charset': "'ascii'"})
+            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'utf8mb4_general_ci'", 'max_length': '255', 'attribute_field': "''", 'charset': "'utf8mb4'"})
         },
         'cyder.soa': {
             'Meta': {'object_name': 'SOA', 'db_table': "'soa'"},
@@ -1215,7 +1215,7 @@ class Migration(SchemaMigration):
             'refresh': ('django.db.models.fields.PositiveIntegerField', [], {'default': '180'}),
             'retry': ('django.db.models.fields.PositiveIntegerField', [], {'default': '86400'}),
             'root_domain': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'root_of_soa'", 'unique': 'True', 'to': "orm['cyder.Domain']"}),
-            'serial': ('django.db.models.fields.PositiveIntegerField', [], {'default': '1419119427'}),
+            'serial': ('django.db.models.fields.PositiveIntegerField', [], {'default': '1419133693'}),
             'ttl': ('django.db.models.fields.PositiveIntegerField', [], {'default': '3600', 'null': 'True', 'blank': 'True'})
         },
         'cyder.soaav': {
@@ -1225,7 +1225,7 @@ class Migration(SchemaMigration):
             'entity': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cyder.SOA']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'null': 'True', 'blank': 'True'}),
-            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'ascii_bin'", 'max_length': '255', 'attribute_field': "''", 'charset': "'ascii'"})
+            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'utf8mb4_general_ci'", 'max_length': '255', 'attribute_field': "''", 'charset': "'utf8mb4'"})
         },
         'cyder.srv': {
             'Meta': {'unique_together': "(('label', 'domain', 'target', 'port'),)", 'object_name': 'SRV', 'db_table': "'srv'"},
@@ -1292,14 +1292,14 @@ class Migration(SchemaMigration):
             'entity': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cyder.StaticInterface']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'null': 'True', 'blank': 'True'}),
-            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'ascii_bin'", 'max_length': '255', 'attribute_field': "''", 'charset': "'ascii'"})
+            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'utf8mb4_general_ci'", 'max_length': '255', 'attribute_field': "''", 'charset': "'utf8mb4'"})
         },
         'cyder.system': {
             'Meta': {'object_name': 'System', 'db_table': "'system'"},
             'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'null': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'null': 'True', 'blank': 'True'}),
-            'name': ('cyder.base.fields.CharField', [], {'collation': "'ascii_general_ci'", 'max_length': '255', 'charset': "'ascii'"})
+            'name': ('cyder.base.fields.CharField', [], {'collation': "'utf8mb4_general_ci'", 'max_length': '255', 'charset': "'utf8mb4'"})
         },
         'cyder.systemav': {
             'Meta': {'unique_together': "(('entity', 'attribute'),)", 'object_name': 'SystemAV', 'db_table': "'system_av'"},
@@ -1308,7 +1308,7 @@ class Migration(SchemaMigration):
             'entity': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cyder.System']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'null': 'True', 'blank': 'True'}),
-            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'ascii_bin'", 'max_length': '255', 'attribute_field': "''", 'charset': "'ascii'"})
+            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'utf8mb4_general_ci'", 'max_length': '255', 'attribute_field': "''", 'charset': "'utf8mb4'"})
         },
         'cyder.task': {
             'Meta': {'ordering': "['task']", 'object_name': 'Task', 'db_table': "u'task'"},
@@ -1368,7 +1368,7 @@ class Migration(SchemaMigration):
             'entity': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cyder.Vlan']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'null': 'True', 'blank': 'True'}),
-            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'ascii_bin'", 'max_length': '255', 'attribute_field': "''", 'charset': "'ascii'"})
+            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'utf8mb4_general_ci'", 'max_length': '255', 'attribute_field': "''", 'charset': "'utf8mb4'"})
         },
         'cyder.vrf': {
             'Meta': {'object_name': 'Vrf', 'db_table': "'vrf'"},
@@ -1384,7 +1384,7 @@ class Migration(SchemaMigration):
             'entity': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cyder.Vrf']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'null': 'True', 'blank': 'True'}),
-            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'ascii_bin'", 'max_length': '255', 'attribute_field': "''", 'charset': "'ascii'"})
+            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'utf8mb4_general_ci'", 'max_length': '255', 'attribute_field': "''", 'charset': "'utf8mb4'"})
         },
         'cyder.workgroup': {
             'Meta': {'object_name': 'Workgroup', 'db_table': "'workgroup'"},
@@ -1400,7 +1400,7 @@ class Migration(SchemaMigration):
             'entity': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cyder.Workgroup']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'null': 'True', 'blank': 'True'}),
-            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'ascii_bin'", 'max_length': '255', 'attribute_field': "''", 'charset': "'ascii'"})
+            'value': ('cyder.base.eav.fields.EAVValueField', [], {'collation': "'utf8mb4_general_ci'", 'max_length': '255', 'attribute_field': "''", 'charset': "'utf8mb4'"})
         }
     }
 

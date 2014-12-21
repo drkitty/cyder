@@ -78,9 +78,6 @@ class EAVValueField(CharField):
         if self.attribute_field is None:
             raise Exception("The 'attribute_field' argument is required")
 
-        kwargs['charset'] = 'ascii'
-        kwargs['collation'] = 'ascii_bin'
-
         super(EAVValueField, self).__init__(*args, **kwargs)
 
     def to_python(self, value):

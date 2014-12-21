@@ -15,8 +15,7 @@ from cyder.core.system.validators import validate_no_spaces
 class System(BaseModel, ObjectUrlMixin):
     name = CharField(
         max_length=255, unique=False, null=False, blank=False,
-        validators=[validate_no_spaces], charset='ascii',
-        collation='ascii_general_ci')
+        validators=[validate_no_spaces])
 
     search_fields = ('name',)
     sort_fields = ('name',)
