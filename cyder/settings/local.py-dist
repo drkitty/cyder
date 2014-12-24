@@ -38,8 +38,7 @@ DATABASES = {
         'HOST': 'localhost',
         'PORT': '',
         'OPTIONS': {
-            'init_command': 'SET storage_engine=InnoDB',
-            'charset' : 'utf8',
+            'init_command': 'SET storage_engine=InnoDB; SET NAMES utf8mb4;',
             'use_unicode' : True,
             'sql_mode': 'TRADITIONAL',
         },
