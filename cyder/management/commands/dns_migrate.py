@@ -26,6 +26,7 @@ from .lib.utilities import (clean_mac, ip2long, long2ip, fix_attr_name,
                            range_usage_get_create, get_label_domain_workaround,
                            ensure_domain_workaround)
 
+
 public, _ = View.objects.get_or_create(name="public")
 private, _ = View.objects.get_or_create(name="private")
 
@@ -57,7 +58,6 @@ delegated_dnames = None
 
 
 class Zone(object):
-
     def __init__(self, domain_id=None, dname=None, soa=None,
                  gen_recs=True, secondary=False):
         self.domain_id = domain_id

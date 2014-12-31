@@ -6,7 +6,6 @@ from django.db.models.loading import get_model
 
 
 class Command(BaseCommand):
-
     option_list = BaseCommand.option_list + (
         make_option('-q', '--qlobber',
                     action='store_true',
