@@ -38,10 +38,6 @@
 	path = vendor/src/django-multidb-router
 	url = https://github.com/jbalogh/django-multidb-router.git
 	ignore = dirty
-[submodule "vendor/src/django-nose"]
-	path = vendor/src/django-nose
-	url = https://github.com/django-nose/django-nose.git
-	ignore = dirty
 [submodule "vendor/src/django-session-csrf"]
 	path = vendor/src/django-session-csrf
 	url = https://github.com/mozilla/django-session-csrf.git
