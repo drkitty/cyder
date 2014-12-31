@@ -232,29 +232,29 @@ class savepoint_atomic(object):
             transaction.savepoint_commit(self.sid)
 
 
-def get_cursor(db_name, use=True):
-    """Return a cursor for database `db_name` and the name of the database.
+def get_cursor(alias, use=True):
+    """Return a cursor for database `alias` and the name of the database.
 
     If `use` is False, don't pass the db argument.
     """
-    if db_name in settings.DATABASES:
-        db_conf = settings.DATABASES[db_name]
-        db = db_conf['NAME']
+    if alias in settings.DATABASES:
+        conf = settings.DATABASES[alias]
+        name = conf['NAME']
         kwargs = {
-            'host': db_conf['HOST'],
-            'port': int(db_conf['PORT'] or '0'),
-            'user': db_conf['USER'],
-            'passwd': db_conf['PASSWORD'],
+            'host': conf['HOST'],
+            'port': int(conf['PORT'] or '0'),
+            'user': conf['USER'],
+            'passwd': conf['PASSWORD'],
         }
-        kwargs.update(db_conf['OPTIONS'])
+        kwargs.update(conf['OPTIONS'])
         if use:
-            kwargs['db'] = db
-    elif db_name in settings.OTHER_DATABASES:
-        db_conf = settings.OTHER_DATABASES[db_name]
-        db = db_conf['db']
-        kwargs = copy(db_conf)
+            kwargs['db'] = name
+    elif alias in settings.OTHER_DATABASES:
+        conf = settings.OTHER_DATABASES[alias]
+        name = conf['db']
+        kwargs = copy(conf)
         if not use:
             del kwargs['db']
     else:
         raise Exception('No such database in DATABASES or OTHER_DATABASES')
-    return MySQLdb.connect(**kwargs).cursor(), db
+    return MySQLdb.connect(**kwargs).cursor(), name
