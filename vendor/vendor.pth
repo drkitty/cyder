@@ -7,7 +7,6 @@ src/django-cronjobs
 src/django-mobility
 src/django-mozilla-product-details
 src/django-multidb-router
-src/django-nose
 src/django-session-csrf
 src/django-sha2
 src/jingo
