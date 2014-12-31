@@ -191,7 +191,8 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = True
 
 ## Tests
-TEST_RUNNER = 'test_utils.runner.RadicalTestSuiteRunner'
+TEST_RUNNER = 'cyder.base.test_runner.CorrectTestSuiteRunner'
+#TEST_RUNNER = 'test_utils.runner.RadicalTestSuiteRunner'
 
 ## Arecibo
 # when ARECIBO_SERVER_URL is set, it can use celery or the regular wrapper
