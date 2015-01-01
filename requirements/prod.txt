@@ -70,3 +70,5 @@ Jinja2==2.5.5
 
 # for bcrypt passwords
 py-bcrypt==0.3
+
+git+git://github.com/django-compressor/django-compressor.git@90966edf9
