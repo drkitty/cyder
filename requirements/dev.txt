@@ -4,6 +4,8 @@
 
 django-debug-toolbar==0.9.4
 django-extensions
+dnspython==1.12.0
+iscpy==1.05
 
 -r prod.txt
 
