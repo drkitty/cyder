@@ -23,7 +23,7 @@ def check_no_ns_soa_condition(domain, view=None):
             if view:
                 error = '{0} view in {1}'.format(view, domain.name)
             else:
-                error = 'domain: {0}'.format(domain.name)
+                error = '{0} domain'.format(domain.name)
             raise ValidationError(
                 "The {0} you are trying to assign this record into does "
                 "not have an NS record, thus cannot support other "
