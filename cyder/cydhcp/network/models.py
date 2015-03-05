@@ -23,12 +23,13 @@ from cyder.cydns.ip.models import ipv6_to_longs
 
 class Network(BaseModel, ObjectUrlMixin):
     id = models.AutoField(primary_key=True)
-    vlan = models.ForeignKey(Vlan, null=True,
-                             blank=True, on_delete=models.SET_NULL)
+    vlan = models.ForeignKey(
+        Vlan, null=True, blank=True, on_delete=models.SET_NULL,
+        verbose_name='VLAN')
     site = models.ForeignKey(Site, null=True,
                              blank=True, on_delete=models.SET_NULL)
-    vrf = models.ForeignKey('cyder.Vrf',
-                            default=1)  # "Legacy"
+    vrf = models.ForeignKey(
+        'cyder.Vrf', default=1, verbose_name='VRF')  # 1 = Legacy
 
     # NETWORK/NETMASK FIELDS
     ip_type = models.CharField(

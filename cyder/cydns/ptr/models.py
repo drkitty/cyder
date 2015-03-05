@@ -150,8 +150,8 @@ class PTR(BaseModel, BasePTR, Ip, ViewMixin, DisplayMixin, ObjectUrlMixin):
     reverse_domain = models.ForeignKey(Domain, null=False, blank=True,
                                        related_name='reverse_ptr_set')
     fqdn = models.CharField(
-        max_length=255, blank=True, validators=[validate_fqdn], db_index=True
-    )
+        max_length=255, blank=True, validators=[validate_fqdn], db_index=True,
+        verbose_name='FQDN')
     ttl = models.PositiveIntegerField(default=3600, blank=True, null=True,
                                       validators=[validate_ttl],
                                       verbose_name="Time to live")

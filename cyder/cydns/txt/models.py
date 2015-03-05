@@ -16,6 +16,7 @@ class TXT(LabelDomainMixin, CydnsRecord):
 
     id = models.AutoField(primary_key=True)
     txt_data = models.TextField(
+        verbose_name='TXT data',
         help_text="The text data for this record.",
         validators=[validate_txt_data]
     )
