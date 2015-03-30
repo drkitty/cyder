@@ -159,6 +159,8 @@ CAS_IGNORE_URL_PATTERNS = (
     '^/api/v1',
 )
 
+MAX_LOG_ENTRIES = 10
+
 
 ##########################
 # copied from funfactory #
