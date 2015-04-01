@@ -35,15 +35,11 @@ def system_detail(request, pk):
     for intr in static:
         if intr.mac:
             related_systems.update(intr.get_related_systems())
-        static_intr.append((tablefy((intr,), request=request),
-                            tablefy(intr.staticinterfaceav_set.all(),
-                                    request=request)))
+        static_intr.append((tablefy((intr,), request=request),))
     for intr in dynamic:
         if intr.mac:
             related_systems.update(intr.get_related_systems())
-        dynamic_intr.append((tablefy((intr,), request=request),
-                             tablefy(intr.dynamicinterfaceav_set.all(),
-                                     request=request)))
+        dynamic_intr.append((tablefy((intr,), request=request),))
 
     related_systems.discard(system)
 
@@ -132,9 +128,9 @@ def system_create_view(request):
     dynamic_form.fields['range'].queryset = Range.objects.filter(range_type='dy')
     static_form.fields['ip_type'].widget = forms.HiddenInput()
 
-    if request.session['ctnr'].name != 'global':
-        dynamic_form.fields['ctnr'].widget = forms.HiddenInput()
-        static_form.fields['ctnr'].widget = forms.HiddenInput()
+    # ctnr field shouldn't exist on these forms
+    dynamic_form.fields['ctnr'].widget = forms.HiddenInput()
+    static_form.fields['ctnr'].widget = forms.HiddenInput()
 
     system_form.make_usable(request)
 

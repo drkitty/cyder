@@ -74,6 +74,9 @@ class Nameserver(LoggedModel, CydnsRecord):
         objects = objects.filter(domain__in=ctnr.domains.all())
         return objects
 
+    def get_ctnrs(self):
+        raise TypeError("This object has no container.")
+
     @property
     def rdtype(self):
         return 'NS'
@@ -148,6 +151,8 @@ class Nameserver(LoggedModel, CydnsRecord):
     def delete(self, *args, **kwargs):
         self.check_no_ns_soa_condition(self.domain)
         super(Nameserver, self).delete(*args, **kwargs)
+        if self.get_glue():
+            self.del_glue()
 
     @transaction_atomic
     def save(self, *args, **kwargs):

@@ -45,7 +45,7 @@ class LabelDomainUtilsMixin(models.Model):
 
     def __init__(self, *args, **kwargs):
         super(LabelDomainUtilsMixin, self).__init__(*args, **kwargs)
-        if self.fqdn:
+        if self.pk is None and self.fqdn:
             self.label_domain_from_fqdn()
 
     def label_domain_from_fqdn(self):
@@ -143,7 +143,11 @@ class CydnsRecord(BaseModel, ViewMixin, DisplayMixin, ObjectUrlMixin):
         return objects
 
     def check_in_ctnr(self, ctnr):
-        if hasattr(self, "domain"):
+        if hasattr(self, "ctnr"):
+            return self.ctnr == ctnr
+        elif hasattr(self, "ctnr_set"):
+            return ctnr in self.ctnr_set.all()
+        elif hasattr(self, "domain"):
             return self.domain in ctnr.domains.all()
 
     @classmethod
@@ -164,7 +168,9 @@ class CydnsRecord(BaseModel, ViewMixin, DisplayMixin, ObjectUrlMixin):
         self.check_TLD_condition()
         check_no_ns_soa_condition(self.domain)
         self.check_domain_ctnr()
-        self.check_for_delegation()
+        if not (hasattr(self, "is_glue") and self.is_glue is True and
+                self.pk is None):
+            self.check_for_delegation()
         if self.rdtype != 'CNAME':
             self.check_for_cname()
 

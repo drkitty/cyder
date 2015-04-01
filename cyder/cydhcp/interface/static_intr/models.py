@@ -15,7 +15,8 @@ from cyder.base.models import ExpirableMixin, LoggedModel
 from cyder.base.fields import MacAddrField
 from cyder.base.utils import transaction_atomic
 from cyder.core.system.models import System
-from cyder.cydhcp.constants import STATIC, DEFAULT_WORKGROUP
+from cyder.cydhcp.constants import (STATIC, SYSTEM_INTERFACE_CTNR_ERROR,
+                                    DEFAULT_WORKGROUP)
 from cyder.cydhcp.range.utils import find_range
 from cyder.cydhcp.utils import format_mac, join_dhcp_args
 from cyder.cydhcp.workgroup.models import Workgroup
@@ -148,6 +149,7 @@ class StaticInterface(LoggedModel, BaseAddressRecord, BasePTR, ExpirableMixin):
                 new_range.save(commit=False)
             if old_range:
                 old_range.save(commit=False)
+        assert self.ctnr == self.system.ctnr
 
     @transaction_atomic
     def delete(self, *args, **kwargs):
@@ -197,16 +199,6 @@ class StaticInterface(LoggedModel, BaseAddressRecord, BasePTR, ExpirableMixin):
             build_str += '\t\tfixed-address {0};\n'.format(self.ip_str)
         build_str += join_dhcp_args(map(self.format_host_option, options),
                                     depth=2)
-        options = self.staticinterfaceav_set.filter(
-            attribute__attribute_type=ATTRIBUTE_OPTION)
-        statements = self.staticinterfaceav_set.filter(
-            attribute__attribute_type=ATTRIBUTE_STATEMENT)
-        if options:
-            build_str += '\t\t# Host Options\n'
-            build_str += join_dhcp_args(options, depth=2)
-        if statements:
-            build_str += '\t\t# Host Statements\n'
-            build_str += join_dhcp_args(statements, depth=2)
         build_str += '\t}\n'
         return build_str
 
@@ -218,6 +210,8 @@ class StaticInterface(LoggedModel, BaseAddressRecord, BasePTR, ExpirableMixin):
 
         super(StaticInterface, self).clean(validate_glue=False,
                                            ignore_intr=True)
+        if self.ctnr != self.system.ctnr:
+            raise ValidationError(SYSTEM_INTERFACE_CTNR_ERROR)
 
         from cyder.cydns.ptr.models import PTR
         if PTR.objects.filter(ip_str=self.ip_str, fqdn=self.fqdn).exists():
@@ -271,14 +265,3 @@ class StaticInterface(LoggedModel, BaseAddressRecord, BasePTR, ExpirableMixin):
         else:
             self.template = self.a_template
         return super(StaticInterface, self).bind_render_record(pk=pk, **kwargs)
-
-
-class StaticInterfaceAV(EAVBase):
-    class Meta(EAVBase.Meta):
-        app_label = 'cyder'
-        db_table = 'static_interface_av'
-
-    entity = models.ForeignKey(StaticInterface)
-    attribute = EAVAttributeField(
-        Attribute,
-        type_choices=(ATTRIBUTE_INVENTORY,))

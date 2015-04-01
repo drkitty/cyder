@@ -1,4 +1,4 @@
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, NoReverseMatch
 from django.db.models.query import QuerySet
 
 from cyder.base.constants import ACTION_UPDATE
@@ -9,7 +9,8 @@ import json
 
 class Tablefier:
     def __init__(self, objects, request=None, extra_cols=None,
-                 users=False, custom=None, update=True):
+                 users=False, custom=None, update=True, detail_view=False,
+                 excluded=[]):
         if users:
             from cyder.core.cyuser.models import UserProfile
             objects = UserProfile.objects.filter(user__in=objects)
@@ -17,12 +18,19 @@ class Tablefier:
         self.objects = objects
         self.request = request
         self.custom = custom
+        self.detail_view = detail_view
+        self.excluded = excluded
         if self.custom:
             self.extra_cols = None
             self.update = False
         else:
             self.extra_cols = extra_cols
             self.update = update
+
+        if detail_view and objects and hasattr(objects[0], 'ctnr'):
+            self.show_ctnr = True
+        else:
+            self.show_ctnr = False
 
     @cached_property
     def profile(self):
@@ -44,14 +52,6 @@ class Tablefier:
         return klass
 
     @cached_property
-    def can_update(self):
-        if (self.profile and self.profile.has_perm(
-                self.request, ACTION_UPDATE, obj_class=self.klass) and
-                hasattr(self.klass, 'get_update_url') and self.update):
-            return True
-        return False
-
-    @cached_property
     def views(self):
         if self.custom:
             return False
@@ -67,6 +67,11 @@ class Tablefier:
         else:
             data = self.first_obj.details()['data']
 
+        columns = map(lambda x: x[0], data)
+        for field in self.excluded:
+            if field in columns:
+                del data[columns.index(field)]
+
         for title, sort_field, value in data:
             headers.append([title, sort_field])
 
@@ -81,7 +86,7 @@ class Tablefier:
             for col in self.extra_cols:
                 headers.append([col['header'], col['sort_field']])
 
-        if self.can_update:
+        if not self.detail_view:
             headers.append(['Actions', None])
 
         if (hasattr(self.objects, 'object_list') and
@@ -92,11 +97,14 @@ class Tablefier:
         if self.add_info:
             headers.insert(0, ['Info', None])
 
+        if self.show_ctnr:
+            headers.append(['Container', ''])
+
         return headers
 
     @cached_property
     def add_info(self):
-        return bool(self.grab_url(self.first_obj))
+        return self.grab_url(self.first_obj) and not self.detail_view
 
     @staticmethod
     def grab_url(value):
@@ -151,11 +159,14 @@ class Tablefier:
                     'obj_type': obj._meta.db_table,
                     'pk': obj.id}))]]
 
-            col = {'value': ['Update', 'Delete'],
-                   'url': [obj.get_update_url(), obj.get_delete_url()],
-                   'data': data,
-                   'class': ['js-get-form', 'delete table_delete'],
-                   'img': ['/media/img/update.png', '/media/img/delete.png']}
+            try:
+                col = {'value': ['Update', 'Delete'],
+                       'url': [obj.get_update_url(), obj.get_delete_url()],
+                       'data': data,
+                       'class': ['js-get-form', 'delete table_delete'],
+                       'img': ['/media/img/update.png', '/media/img/delete.png']}
+            except NoReverseMatch:
+                col = {'value': []}
         else:
             col = {'value': []}
 
@@ -175,6 +186,11 @@ class Tablefier:
                     'class': ['info'], 'img': ['/media/img/magnify.png']})
 
             details = self.custom(obj) if self.custom else obj.details()
+            columns = map(lambda x: x[0], details['data'])
+            for field in self.excluded:
+                if field in columns:
+                    del details['data'][columns.index(field)]
+
             for title, field, value in details['data']:
                 row_data.append(self.build_data(obj, value))
 
@@ -184,7 +200,10 @@ class Tablefier:
             for d in extra_data:
                 row_data.append(self.build_extra(d))
 
-            if self.can_update:
+            if self.show_ctnr:
+                row_data.append(self.build_data(obj, obj.ctnr))
+
+            if not self.detail_view:
                 row_data.append(self.build_update_field(obj))
 
             objs.append(obj)
@@ -193,13 +212,13 @@ class Tablefier:
 
         return objs, data, urls
 
-    @staticmethod 
-    def remove_field(table_dict, header_name): 
+    @staticmethod
+    def remove_field(table_dict, header_name):
         for i, header in enumerate(table_dict['headers']):
           if header[0] == header_name:
             del table_dict['headers'][i]
             del table_dict['data'][0][i]
-            return 
+            return
 
     def get_table(self):
         if not self.objects:

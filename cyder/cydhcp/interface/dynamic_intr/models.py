@@ -13,7 +13,8 @@ from cyder.base.models import BaseModel, ExpirableMixin, LoggedModel
 from cyder.base.utils import transaction_atomic
 from cyder.core.ctnr.models import Ctnr
 from cyder.core.system.models import System
-from cyder.cydhcp.constants import DEFAULT_WORKGROUP
+from cyder.cydhcp.constants import (SYSTEM_INTERFACE_CTNR_ERROR,
+                                    DEFAULT_WORKGROUP)
 from cyder.cydhcp.interface.dynamic_intr.validation import is_dynamic_range
 from cyder.cydhcp.range.models import Range
 from cyder.cydhcp.utils import format_mac, join_dhcp_args
@@ -34,7 +35,7 @@ class DynamicInterface(LoggedModel, BaseModel, ObjectUrlMixin, ExpirableMixin):
     dhcp_enabled = models.BooleanField(default=True,
                                        verbose_name='Enable DHCP?')
     last_seen = models.DateTimeField(null=True, blank=True)
-    search_fields = 'mac',
+    search_fields = ('mac', 'system__name')
     audit_fields = ('ctnr', 'workgroup', 'system', 'mac', 'range',
                     'dhcp_enabled', 'last_seen', 'modified', 'expire')
 
@@ -90,16 +91,6 @@ class DynamicInterface(LoggedModel, BaseModel, ObjectUrlMixin, ExpirableMixin):
         build_str += "\t\thardware ethernet {0};\n".format(self.mac)
         build_str += join_dhcp_args(map(self.format_host_option, options),
                                     depth=2)
-        options = self.dynamicinterfaceav_set.filter(
-            attribute__attribute_type=ATTRIBUTE_OPTION)
-        statements = self.dynamicinterfaceav_set.filter(
-            attribute__attribute_type=ATTRIBUTE_STATEMENT)
-        if options:
-            build_str += "\t\t# Host Options\n"
-            build_str += join_dhcp_args(options, depth=2)
-        if statements:
-            build_str += "\t\t# Host Statemets\n"
-            build_str += join_dhcp_args(statements, depth=2)
         build_str += "\t}\n"
         return build_str
 
@@ -115,14 +106,15 @@ class DynamicInterface(LoggedModel, BaseModel, ObjectUrlMixin, ExpirableMixin):
         return related_systems
 
     def get_fqdn(self):
-        if not self.system.name:
-            return self.range.domain.name
-        else:
-            return "{0}.{1}".format(self.system.name, self.range.domain.name)
+        return (
+            self.mac.replace(':', '') + '-' + str(self.range.pk) + '.' +
+            self.range.domain.name)
 
     def clean(self, *args, **kwargs):
         super(DynamicInterface, self).clean(*args, **kwargs)
-        if self.mac:
+        if self.ctnr != self.system.ctnr:
+            raise ValidationError(SYSTEM_INTERFACE_CTNR_ERROR)
+        if self.mac and self.range_id is not None:
             siblings = self.range.dynamicinterface_set.filter(mac=self.mac)
             if self.pk is not None:
                 siblings = siblings.exclude(pk=self.pk)
@@ -158,14 +150,4 @@ class DynamicInterface(LoggedModel, BaseModel, ObjectUrlMixin, ExpirableMixin):
             self.range.save(commit=False)
             if old_range:
                 old_range.save(commit=False)
-
-
-class DynamicInterfaceAV(EAVBase):
-    class Meta(EAVBase.Meta):
-        app_label = 'cyder'
-        db_table = "dynamic_interface_av"
-
-    entity = models.ForeignKey(DynamicInterface)
-    attribute = EAVAttributeField(
-        Attribute,
-        type_choices=(ATTRIBUTE_INVENTORY,))
+        assert self.ctnr == self.system.ctnr

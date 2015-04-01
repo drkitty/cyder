@@ -134,12 +134,16 @@ class Domain(LoggedModel, BaseModel, ObjectUrlMixin):
 
     @classmethod
     @transaction_atomic
-    def create_recursive(cls, name, commit=True):
+    def create_recursive(cls, name):
         first_dot = name.find('.')
         if first_dot >= 0:  # not a TLD
             rest = name[(first_dot + 1):]
-            cls.create_recursive(name=rest)
-        domain, created = cls.objects.get_or_create(name=name)
+            cls.create_recursive(name=rest, commit=False)
+        try:
+            domain = cls.objects.get(name=name)
+        except cls.DoesNotExist:
+            domain = cls(name=name)
+            domain.save(commit=False)
         return domain
 
     @transaction_atomic
@@ -228,9 +232,15 @@ class Domain(LoggedModel, BaseModel, ObjectUrlMixin):
         else:
             db_self = Domain.objects.get(pk=self.pk)
 
-            if db_self.name != self.name and self.domain_set.exists():
-                raise ValidationError("Child domains rely on this domain's "
-                                      "name remaining the same.")
+            if db_self.name != self.name:
+                if self.domain_set.exists():
+                    raise ValidationError(
+                        "This domain has subdomains. Delete them before "
+                        "renaming this domain.")
+                if self.has_record_set():
+                    raise ValidationError(
+                        "There are records associated with this domain. "
+                        "Delete them before renaming this domain.")
 
             # Raise an exception...
             # If our soa is different AND it's non-null AND we have records in

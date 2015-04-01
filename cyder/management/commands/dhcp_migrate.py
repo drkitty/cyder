@@ -39,7 +39,16 @@ allow_all_subnets = [
     '10.196.0.32', '10.196.4.32', '10.192.136.63', '10.196.8.8',
     '10.196.16.8', '10.196.24.8', '10.196.32.8', '10.196.40.8',
     '10.162.128.32', '10.162.136.32', '10.162.144.32', '10.198.0.80',
-    '10.198.0.140', '10.192.131.9', '10.255.255.255', '10.214.64.32']
+    '10.198.0.140', '10.192.131.9', '10.255.255.255', '10.214.64.32',
+    '10.196.56.8', '10.162.152.32', '10.162.160.32', '10.193.18.132',
+    '128.193.48.2', '10.162.168.32', '10.162.176.32', '10.162.184.32',
+    '10.162.0.32', '10.162.8.32', '10.162.16.32', '10.162.24.32',
+    '10.162.32.32', '10.162.40.32', '10.162.48.32', '10.162.56.32',
+    '10.196.8.30', '10.196.16.30', '10.196.24.30', '10.196.32.30',
+    '10.196.40.30', '10.196.56.30', '10.196.64.30', '10.196.72.30',
+    '10.196.80.30', '10.248.0.128', '10.248.128.128', '10.249.0.128',
+    '10.249.128.128', '10.250.0.128', '10.250.128.128', '10.251.0.128',
+    '10.251.128.128', '10.196.88.30']
 
 
 voip_networks = {
@@ -372,7 +381,7 @@ def migrate_dynamic_hosts():
                          .format(items['ha']))
             continue
 
-        s = System(name=items['name'])
+        s = System(name=items['name'], ctnr=c)
         s.save()
         for key in sys_value_keys.keys():
             value = items[key].strip()
@@ -408,6 +417,7 @@ def migrate_dynamic_hosts():
                     'address {}\n'.format(intr.mac))
                 stderr.write('    {}\n'.format(e))
                 intr = None
+                s.delete()
 
         if intr:
             count += 1
@@ -615,12 +625,12 @@ def delete_all():
     Range.objects.all().delete()
     Vlan.objects.all().delete()
     Network.objects.all().delete()
-    Vrf.objects.filter(id__gt=2).delete()  # First 2 are fixtures
-    Ctnr.objects.filter(id__gt=2).delete()  # First 2 are fixtures
+    Vrf.objects.filter(id__gt=2).delete()  # First 2 are initial data
+    Ctnr.objects.filter(id__gt=2).delete()  # First 2 are initial data
     DynamicInterface.objects.all().delete()
-    Workgroup.objects.all().delete()
-    User.objects.filter(id__gt=1).delete()  # First user is a fixture
-    CtnrUser.objects.filter(id__gt=2).delete()  # First 2 are fixtures
+    Workgroup.objects.filter(id__gt=1).delete()  # First one is initial data
+    User.objects.filter(id__gt=1).delete()  # First one is initial data
+    CtnrUser.objects.filter(id__gt=2).delete()  # First 2 are initial data
 
 
 def do_everything(skip=False):
