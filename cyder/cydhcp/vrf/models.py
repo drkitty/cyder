@@ -72,7 +72,6 @@ class Vrf(BaseModel, ObjectUrlMixin):
                      '\tmatch hardware;\n'
                      '}}\n'
                      .format(self.name))
-
         for network_ in self.network_set.all():
             for range_ in network_.range_set.all():
                 clients = chain(
@@ -81,8 +80,7 @@ class Vrf(BaseModel, ObjectUrlMixin):
                 )
                 for client in clients:
                     build_str += client.build_subclass(self.name)
-
-
+        build_str += '\n'
         return build_str
 
 

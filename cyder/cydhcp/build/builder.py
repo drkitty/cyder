@@ -15,8 +15,8 @@ from cyder.base.utils import (
 from cyder.base.vcs import GitRepo
 
 from cyder.core.utils import fail_mail
-from cyder.core.ctnr.models import Ctnr
 from cyder.cydhcp.network.models import Network
+from cyder.cydhcp.range.models import Range
 from cyder.cydhcp.vrf.models import Vrf
 from cyder.cydhcp.workgroup.models import Workgroup
 
@@ -100,8 +100,6 @@ class DHCPBuilder(MutexMixin, Logger):
         try:
             with open(os.path.join(self.stage_dir, self.target_file), 'w') \
                     as f:
-                for ctnr in Ctnr.objects.all():
-                    f.write(ctnr.build_legacy_classes())
                 for vrf in Vrf.objects.all():
                     f.write(vrf.build_vrf())
                 for network in Network.objects.filter(enabled=True):

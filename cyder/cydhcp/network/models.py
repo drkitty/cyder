@@ -220,29 +220,34 @@ class Network(BaseModel, ObjectUrlMixin):
         return set([network.site for network in networks]).discard(None)
 
     def build_subnet(self, raw=False):
+        build_str = ''
+        ranges = self.range_set.filter(range_type=DYNAMIC, dhcp_enabled=True)
+
+        # Build classes.
+        for rng in ranges:
+            build_str += rng.build_class()
+
+        # Build subnet declaration.
         self.update_network()
         statements = self.networkav_set.filter(
             attribute__attribute_type=ATTRIBUTE_STATEMENT)
         options = self.networkav_set.filter(
             attribute__attribute_type=ATTRIBUTE_OPTION)
-        ranges = self.range_set.filter(range_type=DYNAMIC, dhcp_enabled=True)
         if self.ip_type == IP_TYPE_4:
-            build_str = "\nsubnet {0} netmask {1} {{\n".format(
+            build_str += 'subnet {0} netmask {1} {{\n'.format(
                 self.network.network, self.network.netmask)
         else:
-            build_str = "\nsubnet6 {0} netmask {1} {{\n".format(
+            build_str += 'subnet6 {0} netmask {1} {{\n'.format(
                 self.network.network, self.network.netmask)
         if not raw:
-            build_str += "\t# Network statements\n"
             build_str += join_dhcp_args(statements)
-            build_str += "\t# Network options\n"
             build_str += join_dhcp_args(options)
             if self.dhcpd_raw_include:
-                build_str += "\t# Raw network options\n"
-                build_str += join_dhcp_args(self.dhcpd_raw_include.split("\n"))
-        for range_ in ranges:
-            build_str += range_.build_range()
-        build_str += "}\n"
+                build_str += join_dhcp_args(self.dhcpd_raw_include.split('\n'))
+        for rng in ranges:
+            build_str += rng.build_range()
+        build_str += '}\n\n'
+
         return build_str
 
     def get_related(self):

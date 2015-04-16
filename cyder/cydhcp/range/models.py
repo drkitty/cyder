@@ -276,22 +276,15 @@ class Range(BaseModel, ViewMixin, ObjectUrlMixin):
         if self.allow == ALLOW_ANY:
             allow = []
         elif self.allow == ALLOW_KNOWN:
-            # FIXME: add hyphen once compatibility with Maintain is established
-            allow = ['allow known clients']
-            allow += [
-                'allow members of "{0}:{1}:{2}"'.format(
-                    ctnr.name, self.start_str, self.end_str)
-                for ctnr in self.ctnr_set.all()]
+            allow = ['allow known-clients']
         else:
             allow = []
             if self.allow == ALLOW_VRF:
                 allow += ['allow members of "{0}"'.format(
                     self.network.vrf.name)]
             if self.allow == ALLOW_LEGACY:
-                allow += [
-                    'allow members of "{0}:{1}:{2}"'.format(
-                        ctnr.name, self.start_str, self.end_str)
-                    for ctnr in self.ctnr_set.all()]
+                allow += ['allow members of "{}:{}"'.format(
+                        self.start_str, self.end_str)]
             if not allow:
                 allow += ['deny unknown-clients']
 
@@ -319,23 +312,31 @@ class Range(BaseModel, ViewMixin, ObjectUrlMixin):
                     oldrange.get_ip_str(padded=False),
                     self.get_ip_str(padded=False)))
 
+    def build_class(self):
+        ifaces = self.dynamicinterface_set.filter(dhcp_enabled=True)
+        classname = self.start_str + ':' + self.end_str
+        build_str = (
+            'class "{}" {{\n'
+            '\tmatch hardware;\n'
+            '}}\n'.format(classname)
+        )
+        for i in ifaces:
+            build_str += i.build_subclass(classname)
+        return build_str
+
     def build_range(self):
         range_options = self.rangeav_set.filter(
             attribute__attribute_type=ATTRIBUTE_OPTION)
         range_statements = self.rangeav_set.filter(
             attribute__attribute_type=ATTRIBUTE_STATEMENT)
         build_str = "\tpool {\n"
-        build_str += "\t\t# Pool Statements\n"
         build_str += "\t\tfailover peer \"dhcp\";\n"
         build_str += "\t\tdeny dynamic bootp clients;\n"
         build_str += join_dhcp_args(range_statements, depth=2)
         if range_options:
-            build_str += "\t\t# Pool Options\n"
             build_str += join_dhcp_args(range_options, depth=2)
         if self.dhcpd_raw_include:
-            build_str += "\t\t# Raw pool includes\n"
             build_str += "\t\t{0};".format(self.dhcp_raw_include)
-        build_str += "\t\t# Allow statements\n"
         build_str += join_dhcp_args(self.get_allow_deny_list(), depth=2)
         if self.ip_type == IP_TYPE_4:
             build_str += "\t\trange {0} {1};\n".format(self.start_str,

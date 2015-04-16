@@ -84,28 +84,6 @@ class Ctnr(BaseModel, ObjectUrlMixin):
             {'name': 'description', 'datatype': 'string', 'editable': True},
         ]}
 
-    def build_legacy_classes(self):
-        build_str = ""
-        for range_ in self.ranges.filter(Q(range_type=DYNAMIC,
-                                           dhcp_enabled=True) |
-                                         Q(start_str='10.255.255.255')):
-            clients = (range_.dynamicinterface_set.filter(ctnr=self,
-                                                          dhcp_enabled=True)
-                                                  .exclude(mac=None))
-
-            classname = '{0}:{1}:{2}'.format(
-                self.name, range_.start_str, range_.end_str)
-
-            build_str += ('class "{0}" {{\n'
-                          '\tmatch hardware;\n'
-                          '}}\n'
-                          .format(classname))
-
-            for client in clients:
-                build_str += client.build_subclass(classname)
-        return build_str
-
-
 class CtnrUser(BaseModel, ObjectUrlMixin):
     user = models.ForeignKey(User)
     ctnr = models.ForeignKey(Ctnr)
