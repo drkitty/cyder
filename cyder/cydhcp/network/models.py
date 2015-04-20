@@ -221,10 +221,11 @@ class Network(BaseModel, ObjectUrlMixin):
 
     def build_subnet(self, raw=False):
         build_str = ''
-        ranges = self.range_set.filter(range_type=DYNAMIC, dhcp_enabled=True)
+        ranges = self.range_set.filter(
+            range_type=DYNAMIC, dhcp_enabled=True)
 
         # Build classes.
-        for rng in ranges:
+        for rng in ranges.filter(allow__in=(ALLOW_STANDARD, ALLOW_LEGACY)):
             build_str += rng.build_class()
 
         # Build subnet declaration.
@@ -245,7 +246,7 @@ class Network(BaseModel, ObjectUrlMixin):
             if self.dhcpd_raw_include:
                 build_str += join_dhcp_args(self.dhcpd_raw_include.split('\n'))
         for rng in ranges:
-            build_str += rng.build_range()
+            build_str += rng.build_pool()
         build_str += '}\n\n'
 
         return build_str

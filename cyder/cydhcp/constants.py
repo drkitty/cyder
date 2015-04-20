@@ -1,18 +1,21 @@
-ALLOW_ANY = 'a'
+ALLOW_ALL = 'a'
 ALLOW_KNOWN = 'k'
 ALLOW_LEGACY = 'l'
+ALLOW_STANDARD = 's'
 ALLOW_VRF = 'v'
 
 ALLOW_OPTIONS = [
-    (ALLOW_ANY, 'ANY: Allow any client'),
-    (ALLOW_KNOWN, 'KNOWN: Allow known clients'),
-    (ALLOW_LEGACY, "LEGACY: Allow any client that shares at least one of this "
-                   "range's containers"),
-    (ALLOW_VRF, "VRF: Allow any client that shares this range's VRF"),
+    (ALLOW_STANDARD, 'STANDARD: All clients in this range'),
+    (ALLOW_ALL, 'ALL: All clients, even those not registered in Cyder'),
+    (ALLOW_KNOWN, 'KNOWN: All clients registered in Cyder'),
+    (ALLOW_LEGACY,
+        'LEGACY: All clients that are in this range and in one of its '
+        'containers'),
+    (ALLOW_VRF, "VRF: All clients in this range's VRF")
 ]
 
-STATIC = "st"
-DYNAMIC = "dy"
+STATIC = 'st'
+DYNAMIC = 'dy'
 RANGE_TYPE = (
     (STATIC, 'Static'),
     (DYNAMIC, 'Dynamic'),

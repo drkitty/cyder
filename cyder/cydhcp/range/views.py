@@ -10,8 +10,8 @@ import ipaddr
 from cyder.base.utils import make_paginator, tablefy, make_megafilter
 from cyder.base.helpers import do_sort
 from cyder.core.ctnr.models import Ctnr
-from cyder.cydhcp.constants import (ALLOW_ANY, ALLOW_KNOWN, ALLOW_VRF,
-                                    ALLOW_LEGACY)
+from cyder.cydhcp.constants import (
+    ALLOW_STANDARD, ALLOW_ALL, ALLOW_KNOWN, ALLOW_VRF, ALLOW_LEGACY)
 from cyder.cydhcp.range.models import Range, RangeAV
 from cyder.cydhcp.range.range_usage import range_usage
 from cyder.cydhcp.utils import two_to_one
@@ -31,16 +31,18 @@ def delete_range_attr(request, attr_pk):
 def range_detail(request, pk):
     mrange = get_object_or_404(Range, pk=pk)
 
-    if mrange.allow == ALLOW_ANY:
-        allow = ['Any client']
+    if mrange.allow == ALLOW_ALL:
+        allow = ['All clients']
     elif mrange.allow == ALLOW_KNOWN:
         allow = ['Known clients']
+    elif mrange.allow == ALLOW_STANDARD:
+        allow = ['All clients in this range']
+    elif mrange.allow == ALLOW_VRF:
+        allow = map(str, Vrf.objects.filter(network=mrange.network))
+    elif mrange.allow == ALLOW_LEGACY:
+        allow = map(str, Ctnr.objects.filter(ranges=mrange))
     else:
         allow = []
-        if mrange.allow == ALLOW_VRF:
-            allow += map(str, Vrf.objects.filter(network=mrange.network))
-        if mrange.allow == ALLOW_LEGACY:
-            allow += map(str, Ctnr.objects.filter(ranges=mrange))
 
     allow.sort(key=lambda x: x.lower())
 
