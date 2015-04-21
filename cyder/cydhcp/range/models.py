@@ -11,9 +11,9 @@ from cyder.base.mixins import ObjectUrlMixin
 from cyder.base.models import BaseModel
 from cyder.base.utils import simple_descriptor, transaction_atomic
 from cyder.cydns.validation import validate_ip_type
-from cyder.cydhcp.constants import (ALLOW_OPTIONS, ALLOW_ALL, ALLOW_KNOWN,
-                                    ALLOW_LEGACY, ALLOW_VRF, RANGE_TYPE,
-                                    STATIC, DYNAMIC)
+from cyder.cydhcp.constants import (
+    ALLOW_OPTIONS, ALLOW_ALL, ALLOW_STANDARD, ALLOW_KNOWN, ALLOW_LEGACY,
+    ALLOW_VRF, RANGE_TYPE, STATIC, DYNAMIC)
 from cyder.cydhcp.interface.static_intr.models import StaticInterface
 from cyder.cydhcp.network.models import Network
 from cyder.cydhcp.utils import (IPFilter, four_to_two, join_dhcp_args,
@@ -285,7 +285,7 @@ class Range(BaseModel, ViewMixin, ObjectUrlMixin):
             elif self.allow == ALLOW_LEGACY:
                 lines += ['allow members of "{}:{}"'.format(
                         self.start_str, self.end_str)]
-            if not allow:
+            if not self.allow:
                 lines += ['deny unknown-clients']
 
         return lines
@@ -313,7 +313,7 @@ class Range(BaseModel, ViewMixin, ObjectUrlMixin):
                     self.get_ip_str(padded=False)))
 
     def build_class(self):
-        if self.allow not in ('ALLOW_STANDARD', 'ALLOW_LEGACY'):
+        if self.allow not in (ALLOW_STANDARD, ALLOW_LEGACY):
             return ''  # Just to be safe.
 
         ifaces = self.dynamicinterface_set.filter(dhcp_enabled=True)

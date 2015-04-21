@@ -10,7 +10,7 @@ from cyder.base.eav.models import Attribute, EAVBase
 from cyder.base.mixins import ObjectUrlMixin
 from cyder.base.models import BaseModel
 from cyder.base.utils import transaction_atomic
-from cyder.cydhcp.constants import DYNAMIC
+from cyder.cydhcp.constants import ALLOW_LEGACY, ALLOW_STANDARD, DYNAMIC
 from cyder.cydhcp.utils import IPFilter, join_dhcp_args
 from cyder.cydhcp.vlan.models import Vlan
 from cyder.cydhcp.vrf.models import Vrf
