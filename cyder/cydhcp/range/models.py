@@ -87,7 +87,7 @@ class Range(BaseModel, ViewMixin, ObjectUrlMixin):
     is_reserved = models.BooleanField(default=False, blank=False)
 
     allow = models.CharField(max_length=1, choices=ALLOW_OPTIONS,
-                             default=ALLOW_LEGACY)
+                             default=ALLOW_STANDARD)
 
     dhcpd_raw_include = models.TextField(blank=True)
     dhcp_enabled = models.BooleanField(default=True)
