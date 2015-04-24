@@ -77,13 +77,10 @@ class Workgroup(BaseModel, ObjectUrlMixin):
         for x in host_options:
             options.remove(x)
 
-        build_str += "\t# Workgroup Options\n"
         if options:
             build_str += join_dhcp_args(options)
-        build_str += "\t# Workgroup Statements\n"
         if statements:
             build_str += join_dhcp_args(statements)
-        build_str += "\t# Static Hosts in Workgroup\n"
         for client in chain(dynamic_clients, static_clients):
             build_str += client.build_host(host_options)
         build_str += "}\n"
