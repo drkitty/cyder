@@ -8,6 +8,7 @@
     <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,400italic,600italic' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Gravitas+One' rel='stylesheet' type='text/css'>
     {{ css('cyder_css') }}
+    {% if dev %}{{ css('cyder_dev_css') }}{% else %}{{ css('cyder_prod_css') }}{% endif %}
     {{ js('cyder_js') }}
     {% block head %}{% endblock %}
   </head>
@@ -30,7 +31,7 @@
             {{ request.user.username }}:
           </a>
           <span class="user-info">
-            <a class="level">
+            <p class="level">
             {% if request.session.level == 0 %}
               guest on
             {% elif request.session.level == 1 %}
@@ -38,7 +39,7 @@
             {% else %}
               admin on
             {% endif %}
-            </a>
+            </p>
           </span>
           <form id="ctnr-change" action="{{ url('ctnr-change') }}" method="post">
             <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">

@@ -267,6 +267,8 @@ MINIFY_BUNDLES = {
             'css/forms.scss',
             'css/tables.scss',
         ),
+        'cyder_dev_css': ('css/dev.scss',),
+        'cyder_prod_css': ('css/prod.scss',),
         'search': ('css/search.scss',),
         'tags_css': ('css//lib/jquery.tagsinput.css',),
     },
@@ -530,9 +532,9 @@ BINDBUILD = {
     'named_checkconf': 'named-checkconf',
     'named_checkzone_opts': '',
 
-    'line_change_limit': 500,
-    # Only one zone at a time should be removed
-    'line_removal_limit': 10,
+    # None means no limit
+    'line_decrease_limit': 500,
+    'line_increase_limit': 500,
 
     'stop_file': '/tmp/cyder_dns.stop',
     'stop_file_email_interval': 1800,  # 30 minutes
@@ -560,14 +562,21 @@ DHCPBUILD = {
     'dhcpd': 'dhcpd',
 
     # target_file: The configuration file that will be generated
-    'target_file': 'dhcpd.conf.data',
-
     # check_file: The conf file whose syntax will be checked (None means don't
-    # check any file)
-    'check_file': None,
+    #     check any file)
 
-    'line_change_limit': 500,
-    'line_removal_limit': None,
+    'files_v4': {
+        'target_file': 'dhcpd.conf.data',
+        'check_file': None,
+    },
+    'files_v6': {
+        'target_file': 'dhcpd.conf.data.6',
+        'check_file': None,
+    },
+
+    # None means no limit
+    'line_decrease_limit': 500,
+    'line_increase_limit': 500,
 
     'stop_file': '/tmp/cyder_dhcp.stop',
     'stop_file_email_interval': 1800,  # 30 minutes

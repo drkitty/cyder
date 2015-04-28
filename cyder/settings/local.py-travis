@@ -189,3 +189,20 @@ PROD_LANGUAGES = (
 )
 
 MAX_LOG_ENTRIES = 5
+
+
+##########################
+# failure email settings #
+##########################
+
+
+# sender
+FAIL_EMAIL_FROM = 'cyder@localhost'
+
+# recipients
+FAIL_EMAIL_TO = (
+    'admin@localhost',
+)
+
+# the SMTP server to send email via
+FAIL_EMAIL_SERVER = 'localhost'

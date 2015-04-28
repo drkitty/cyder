@@ -66,7 +66,7 @@ class DynamicInterface(LoggedModel, BaseModel, ObjectUrlMixin, ExpirableMixin):
         data['data'] = [
             ('System', 'system', self.system),
             ('Mac', 'mac', self),
-            ('Range', 'range', self.range),
+            ('Range', 'range__start_lower', self.range),
             ('Workgroup', 'workgroup', self.workgroup),
             ('Last seen', 'last_seen', self.last_seen)]
         return data

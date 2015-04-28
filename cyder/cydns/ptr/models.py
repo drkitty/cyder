@@ -265,7 +265,7 @@ class PTR(LoggedModel, BaseModel, BasePTR, Ip, ViewMixin, DisplayMixin,
         data = super(PTR, self).details()
         data['data'] = [
             ('Target', 'fqdn', self.fqdn),
-            ('IP', 'ip_str', str(self.ip_str)),
+            ('IP', 'ip_lower', str(self.ip_str)),
         ]
         return data
 

@@ -33,7 +33,7 @@ class DHCPBuilder(MutexMixin, Logger):
         set_attrs(self, kwargs)
 
         self.repo = GitRepo(
-            self.prod_dir, self.line_change_limit, self.line_removal_limit,
+            self.prod_dir, self.line_decrease_limit, self.line_increase_limit,
             logger=self)
 
     def log(self, log_level, msg):
@@ -95,26 +95,28 @@ class DHCPBuilder(MutexMixin, Logger):
             else:
                 raise
 
-        self.log_info('Building...')
-
         try:
-            with open(os.path.join(self.stage_dir, self.target_file), 'w') \
-                    as f:
-                for ctnr in Ctnr.objects.all():
-                    f.write(ctnr.build_legacy_classes())
-                for vrf in Vrf.objects.all():
-                    f.write(vrf.build_vrf())
-                for network in Network.objects.filter(enabled=True):
-                    f.write(network.build_subnet())
-                for workgroup in Workgroup.objects.all():
-                    f.write(workgroup.build_workgroup())
+            for ip_type, files in (('4', self.files_v4), ('6', self.files_v6)):
+                self.log_info('Building v{}...'.format(ip_type))
+                with open(os.path.join(self.stage_dir, files['target_file']),
+                          'w') as f:
+                    for ctnr in Ctnr.objects.all():
+                        f.write(ctnr.build_legacy_classes(ip_type))
+                    for vrf in Vrf.objects.all():
+                        f.write(vrf.build_vrf(ip_type))
+                    for network in Network.objects.filter(
+                            ip_type=ip_type, enabled=True):
+                        f.write(network.build_subnet())
+                    for workgroup in Workgroup.objects.all():
+                        f.write(workgroup.build_workgroup(ip_type))
+
+                if files['check_file']:
+                    self.check_syntax(
+                        ip_type=ip_type, filename=files['check_file'])
         except:
             self.log(syslog.LOG_ERR,
                 'DHCP build failed.\nOriginal exception: ' + e.message)
             raise
-
-        if self.check_file:
-            self.check_syntax()
 
         self.log_info('DHCP build successful')
 
@@ -129,18 +131,9 @@ class DHCPBuilder(MutexMixin, Logger):
 
         self.repo.commit_and_push('Update config', sanity_check=sanity_check)
 
-    def error(self):
-        ei = sys.exc_info()
-        exc_msg = ''.join(format_exception(*ei)).rstrip('\n')
-
-        self.log_err(
-            'DHCP build failed.\nOriginal exception: ' + exc_msg,
-            to_stderr=False)
-        raise
-
-    def check_syntax(self):
-        out, err, ret = run_command("{0} -t -cf {1}".format(
-            self.dhcpd, os.path.join(self.stage_dir, self.check_file)
+    def check_syntax(self, ip_type, filename):
+        out, err, ret = run_command("{} -{} -t -cf {}".format(
+            self.dhcpd, ip_type, os.path.join(self.stage_dir, filename)
         ))
 
         if ret != 0:

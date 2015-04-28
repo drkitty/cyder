@@ -53,11 +53,10 @@ class Network(LoggedModel, BaseModel, ObjectUrlMixin):
     network = None
 
     search_fields = ('vlan__name', 'site__name', 'network_str')
-    display_fields = ('network_str',)
     audit_fields = ('id', 'vlan', 'site', 'vrf', 'ip_type', 'ip_upper',
                     'ip_lower', 'network_str', 'prefixlen', 'enabled',
                     'dhcpd_raw_include')
-    sort_fields = ('network_str',)
+    sort_fields = ('ip_lower',)
 
     class Meta:
         app_label = 'cyder'
@@ -85,7 +84,7 @@ class Network(LoggedModel, BaseModel, ObjectUrlMixin):
         """For tables."""
         data = super(Network, self).details()
         data['data'] = (
-            ('Network', 'network_str', self),
+            ('Network', 'ip_lower', self),
             ('Site', 'site', self.site),
             ('Vlan', 'vlan', self.vlan),
             ('Vrf', 'vrf', self.vrf),
@@ -326,4 +325,5 @@ class NetworkAV(EAVBase):
         db_table = 'network_av'
 
     entity = models.ForeignKey(Network)
-    attribute = EAVAttributeField(Attribute)
+    attribute = EAVAttributeField(Attribute,
+        type_choices=(ATTRIBUTE_OPTION, ATTRIBUTE_STATEMENT))
