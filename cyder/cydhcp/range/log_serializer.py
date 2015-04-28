@@ -15,7 +15,7 @@ class RangeLogSerializer(BaseLogSerializer):
         fields = ('name', 'network', 'range_type', 'ip_type', 'start_address',
                   'end_address', 'domain', 'is_reserved', 'allow',
                   'dhcpd_raw_include', 'dhcp_enabled', 'description',
-                  'allow_voip_phones', 'last_save_user')
+                  'last_save_user')
 
     def get_network_representation(self, obj):
         return str(obj.network)
