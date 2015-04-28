@@ -40,7 +40,7 @@ def cydns_view(request, pk=None):
                         request.session, 'become_user_stack',
                         [request.user])[0]
                     obj.save()
-                    form.save_m2m(obj)
+                    form.save_m2m()
                 else:
                     obj = form.save()
 
