@@ -226,7 +226,7 @@ class Network(BaseModel, ObjectUrlMixin):
 
         # Build classes.
         for rng in ranges.filter(allow__in=(ALLOW_STANDARD, ALLOW_LEGACY)):
-            build_str += rng.build_class()
+            build_str += rng.build_classes()
 
         # Build subnet declaration.
         self.update_network()

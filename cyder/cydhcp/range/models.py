@@ -316,7 +316,7 @@ class Range(BaseModel, ViewMixin, ObjectUrlMixin):
                     oldrange.get_ip_str(padded=False),
                     self.get_ip_str(padded=False)))
 
-    def build_class(self):
+    def build_classes(self):
         if self.allow == ALLOW_STANDARD:
             ifaces = self.dynamicinterface_set.filter(dhcp_enabled=True)
             classname = self.start_str + ':' + self.end_str
@@ -329,12 +329,13 @@ class Range(BaseModel, ViewMixin, ObjectUrlMixin):
                 build_str += i.build_subclass(classname)
             return build_str
         elif self.allow == ALLOW_LEGACY:
+            build_str = ''
             for ctnr in self.ctnr_set.all():
                 ifaces = self.dynamicinterface_set.filter(
                     dhcp_enabled=True, ctnr=ctnr)
                 classname = (ctnr.name + ':' + self.start_str + ':' +
                              self.end_str)
-                build_str = (
+                build_str += (
                     'class "{}" {{\n'
                     '\tmatch hardware;\n'
                     '}}\n'.format(classname)
