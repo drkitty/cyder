@@ -1,3 +1,5 @@
+from types import MethodType
+
 from django import forms
 from django.db.models.loading import get_model
 from django.forms import ModelForm
@@ -99,5 +101,5 @@ class DNSForm(ViewChoiceForm):
         else:
             # we're not committing. add a method to the form to allow deferred
             # saving of m2m data.
-            self.save_m2m = save_m2m
+            self.save_m2m = MethodType(save_m2m, instance, type(instance))
         return instance
