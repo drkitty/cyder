@@ -289,7 +289,7 @@ class Range(BaseModel, ViewMixin, ObjectUrlMixin):
             elif self.allow == ALLOW_STANDARD:
                 lines.append('allow members of "{}:{}"'.format(
                     self.start_str, self.end_str))
-            if not self.allow:
+            if not lines:
                 lines.append('deny unknown-clients')
 
         return lines
