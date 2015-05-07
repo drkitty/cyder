@@ -37,13 +37,12 @@ def cydns_view(request, pk=None):
 
             obj = form.save()
             # If domain, add to current ctnr.
-            if is_ajax_form(request):
-                return HttpResponse(json.dumps({'success': True}))
-
             if (hasattr(obj, 'ctnr_set') and
                     not obj.ctnr_set.exists()):
                 obj.ctnr_set.add(request.session['ctnr'])
-                return redirect(obj.get_list_url())
+
+            if is_ajax_form(request):
+                return HttpResponse(json.dumps({'success': True}))
         except (ValidationError, ValueError), e:
             if hasattr(e, 'messages'):
                 e = e.messages
