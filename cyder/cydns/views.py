@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db.utils import DatabaseError
 from django.forms.util import ErrorDict, ErrorList
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -45,14 +46,20 @@ def cydns_view(request, pk=None):
                 return HttpResponse(json.dumps({'success': True}))
         except (ValidationError, ValueError), e:
             if hasattr(e, 'messages'):
-                e = e.messages
+                msgs = e.messages
+            else:
+                msgs = [unicode(e)]
 
-            if not form._errors:
+            if form._errors is None:
                 form._errors = ErrorDict()
-                form._errors['__all__'] = ErrorList(e)
+            form.errors.setdefault('__all__', []).append(msgs)
 
-            if is_ajax_form(request):
-                return HttpResponse(json.dumps({'errors': form.errors}))
+            return HttpResponse(json.dumps({'errors': form.errors}))
+        except DatabaseError as e:  # DatabaseError(number, description)
+            if form._errors is None:
+                form._errors = ErrorDict()
+            form._errors.setdefault('__all__', []).append(e.args[1])
+            return HttpResponse(json.dumps({'errors': form.errors}))
     elif request.method == 'GET':
         form = FormKlass(instance=obj)
 

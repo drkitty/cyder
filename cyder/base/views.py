@@ -168,14 +168,20 @@ def cy_view(request, template, pk=None, obj_type=None):
             return HttpResponse(
                 json.dumps({'row': object_table}))
         except (ValidationError, ValueError) as e:
-            if form.errors is None:
-                form.errors = ErrorDict()
-            form.errors.update(e.message_dict)
+            if hasattr(e, 'messages'):
+                msgs = e.messages
+            else:
+                msgs = [unicode(e)]
+
+            if form._errors is None:
+                form._errors = ErrorDict()
+            form.errors.setdefault('__all__', []).append(msgs)
+
             return HttpResponse(json.dumps({'errors': form.errors}))
         except DatabaseError as e:  # DatabaseError(number, description)
-            if form.errors is None:
-                form.errors = ErrorDict()
-            form.errors.setdefault('__all__', []).append(e.args[1])
+            if form._errors is None:
+                form._errors = ErrorDict()
+            form._errors.setdefault('__all__', []).append(e.args[1])
             return HttpResponse(json.dumps({'errors': form.errors}))
     elif request.method == 'GET':
         object_list = _filter(request, Klass)
