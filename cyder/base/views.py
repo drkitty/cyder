@@ -4,7 +4,7 @@ from copy import copy
 from django import forms
 from django.conf import settings
 from django.contrib import messages
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.mail import send_mail, BadHeaderError
 from django.core.urlresolvers import reverse
 from django.db.models import get_model
@@ -152,20 +152,21 @@ def cy_view(request, template, pk=None, obj_type=None):
             return HttpResponse(json.dumps({'errors': form.errors}))
 
         try:
-            if perm(request, ACTION_CREATE, obj=obj, obj_class=Klass):
-                obj = form.save()
+            if not perm(request, ACTION_CREATE, obj=obj, obj_class=Klass):
+                raise PermissionDenied
 
-                if Klass.__name__ == 'Ctnr':
-                    request = ctnr_update_session(request, obj)
+            obj = form.save()
 
-                if (hasattr(obj, 'ctnr_set') and
-                        not obj.ctnr_set.exists()):
-                    obj.ctnr_set.add(request.session['ctnr'])
+            if Klass.__name__ == 'Ctnr':
+                request = ctnr_update_session(request, obj)
 
-                object_table = tablefy([obj], request=request)
-                return HttpResponse(
-                    json.dumps({'row': object_table}))
+            if (hasattr(obj, 'ctnr_set') and
+                    not obj.ctnr_set.exists()):
+                obj.ctnr_set.add(request.session['ctnr'])
 
+            object_table = tablefy([obj], request=request)
+            return HttpResponse(
+                json.dumps({'row': object_table}))
         except (ValidationError, ValueError) as e:
             if form.errors is None:
                 form.errors = ErrorDict()

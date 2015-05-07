@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.forms.util import ErrorDict, ErrorList
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -32,17 +32,18 @@ def cydns_view(request, pk=None):
 
         form = FormKlass(request.POST, instance=obj)
         try:
-            if perm(request, ACTION_CREATE, obj=obj, obj_class=Klass):
-                obj = form.save()
-                # If domain, add to current ctnr.
-                if is_ajax_form(request):
-                    return HttpResponse(json.dumps({'success': True}))
+            if not perm(request, ACTION_CREATE, obj=obj, obj_class=Klass):
+                raise PermissionDenied
 
-                if (hasattr(obj, 'ctnr_set') and
-                        not obj.ctnr_set.exists()):
-                    obj.ctnr_set.add(request.session['ctnr'])
-                    return redirect(obj.get_list_url())
+            obj = form.save()
+            # If domain, add to current ctnr.
+            if is_ajax_form(request):
+                return HttpResponse(json.dumps({'success': True}))
 
+            if (hasattr(obj, 'ctnr_set') and
+                    not obj.ctnr_set.exists()):
+                obj.ctnr_set.add(request.session['ctnr'])
+                return redirect(obj.get_list_url())
         except (ValidationError, ValueError), e:
             if hasattr(e, 'messages'):
                 e = e.messages
