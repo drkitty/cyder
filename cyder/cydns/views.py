@@ -34,13 +34,14 @@ def cydns_index(request):
     ctnr = request.session['ctnr']
     counts = []
     Klasses = [(AddressRecord, 'Address Records'), (PTR, 'PTRs'), (MX, 'MXs'),
-        (SRV,'SRVs'), (SSHFP, 'SSHFPs'), (TXT, 'TXTs'), (CNAME, 'CNAMES')]
+        (SRV,'SRVs'), (SSHFP, 'SSHFPs'), (TXT, 'TXTs'), (CNAME, 'CNAMEs')]
 
     if ctnr.name != 'global':
         domains = ctnr.domains.all()
         soa_list = []
         for Klass in Klasses:
-            counts.append((Klass[1], Klass[0].objects.filter(ctnr=ctnr).count()))
+            counts.append(
+                (Klass[1], Klass[0].objects.filter(ctnr=ctnr).count()))
 
         ns_count = 0
         for domain in domains:
