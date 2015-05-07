@@ -50,77 +50,74 @@ def admin_page(request):
                                  request.POST['edit_action'])
 
     else:
-        if User.objects.get(
-                id=request.session['_auth_user_id']).is_superuser == 1:
-
-            lost_users = []
-            perma_delete_data = []
-            superusers = []
-            nonlost_users = CtnrUser.objects.values_list('user')
-            for user in User.objects.all().order_by('username'):
-                if (user.pk,) not in nonlost_users:
-                    lost_users.append(user)
-
-                if user.is_superuser:
-                    superusers.append(user)
-
-            extra_cols = [
-                {'header': 'Actions', 'sort_field': 'user'}]
-
-            for user in lost_users:
-                perma_delete_data.append({
-                    'value': ['Delete'],
-                    'url': [reverse('user-delete', kwargs={
-                        'user_id': user.id})],
-                    'img': ['/media/img/delete.png']})
-
-            extra_cols[0]['data'] = perma_delete_data
-            user_table = tablefy(lost_users, extra_cols=extra_cols, users=True,
-                                 request=request, update=False)
-
-            superuser_table = tablefy(superusers, users=True, request=request,
-                                      update=False)
-            user_form = EditUserForm()
-
-            return cy_render(request, 'base/admin_page.html', {
-                'user_table': user_table,
-                'superuser_table': superuser_table,
-                'users': lost_users,
-                'user_form': user_form})
-        else:
+        if not User.objects.get(
+                id=request.session['_auth_user_id']).is_superuser:
             return redirect(reverse('core-index'))
+
+        lost_users = []
+        perma_delete_data = []
+        superusers = []
+        nonlost_users = CtnrUser.objects.values_list('user')
+        for user in User.objects.all().order_by('username'):
+            if (user.pk,) not in nonlost_users:
+                lost_users.append(user)
+
+            if user.is_superuser:
+                superusers.append(user)
+
+        extra_cols = [
+            {'header': 'Actions', 'sort_field': 'user'}]
+
+        for user in lost_users:
+            perma_delete_data.append({
+                'value': ['Delete'],
+                'url': [reverse('user-delete', kwargs={
+                    'user_id': user.id})],
+                'img': ['/media/img/delete.png']})
+
+        extra_cols[0]['data'] = perma_delete_data
+        user_table = tablefy(lost_users, extra_cols=extra_cols, users=True,
+                             request=request, update=False)
+
+        superuser_table = tablefy(superusers, users=True, request=request,
+                                  update=False)
+        user_form = EditUserForm()
+
+        return cy_render(request, 'base/admin_page.html', {
+            'user_table': user_table,
+            'superuser_table': superuser_table,
+            'users': lost_users,
+            'user_form': user_form})
 
 
 def send_email(request):
     if request.POST:
         form = BugReportForm(request.POST)
 
-        if form.is_valid():
-            from_email = User.objects.get(
-                pk=request.session['_auth_user_id']).email
-            subject = "Cyder Bug Report: " + str(request.POST.get('bug', ''))
-            message = (
-                "|.......User Description......|\n"
-                + request.POST.get('description', '')
-                + "\n\nHow to Reproduce:"
-                + "\n" + request.POST.get('reproduce', '')
-                + "\n\nExpected Result:"
-                + "\n" + request.POST.get('expected', '')
-                + "\n\nActual Result:"
-                + "\n" + request.POST.get('actual', '')
-                + request.POST.get('session_data', ''))
-            try:
-                send_mail(subject, message, from_email,
-                          [BUG_REPORT_EMAIL])
-                return HttpResponse(json.dumps({'success': True}))
-
-            except BadHeaderError:
-                return HttpResponse(json.dumps(
-                    {'errors': {'__all__': 'Invalid header found.'}}))
-
-        else:
+        if not form.is_valid():
             return HttpResponse(json.dumps({'errors': form.errors}))
 
+        from_email = User.objects.get(
+            pk=request.session['_auth_user_id']).email
+        subject = "Cyder Bug Report: " + str(request.POST.get('bug', ''))
+        message = (
+            "|.......User Description......|\n"
+            + request.POST.get('description', '')
+            + "\n\nHow to Reproduce:"
+            + "\n" + request.POST.get('reproduce', '')
+            + "\n\nExpected Result:"
+            + "\n" + request.POST.get('expected', '')
+            + "\n\nActual Result:"
+            + "\n" + request.POST.get('actual', '')
+            + request.POST.get('session_data', ''))
+        try:
+            send_mail(subject, message, from_email,
+                      [BUG_REPORT_EMAIL])
+            return HttpResponse(json.dumps({'success': True}))
+
+        except BadHeaderError:
+            return HttpResponse(json.dumps(
+                {'errors': {'__all__': 'Invalid header found.'}}))
     else:
         session_data = (
             "\n\n|................URL...............|\n\n"
@@ -150,33 +147,34 @@ def cy_view(request, template, pk=None, obj_type=None):
         page_obj = None
 
         form = FormKlass(request.POST, instance=obj)
-        if form.is_valid():
-            try:
-                if perm(request, ACTION_CREATE, obj=obj, obj_class=Klass):
-                    obj = form.save()
 
-                    if Klass.__name__ == 'Ctnr':
-                        request = ctnr_update_session(request, obj)
+        if not form.is_valid():
+            return HttpResponse(json.dumps({'errors': form.errors}))
 
-                    if (hasattr(obj, 'ctnr_set') and
-                            not obj.ctnr_set.exists()):
-                        obj.ctnr_set.add(request.session['ctnr'])
+        try:
+            if perm(request, ACTION_CREATE, obj=obj, obj_class=Klass):
+                obj = form.save()
 
-                    object_table = tablefy([obj], request=request)
-                    return HttpResponse(
-                        json.dumps({'row': object_table}))
+                if Klass.__name__ == 'Ctnr':
+                    request = ctnr_update_session(request, obj)
 
-            except (ValidationError, ValueError) as e:
-                if form.errors is None:
-                    form.errors = ErrorDict()
-                form.errors.update(e.message_dict)
-                return HttpResponse(json.dumps({'errors': form.errors}))
-            except DatabaseError as e:  # DatabaseError(number, description)
-                if form.errors is None:
-                    form.errors = ErrorDict()
-                form.errors.setdefault('__all__', []).append(e.args[1])
-                return HttpResponse(json.dumps({'errors': form.errors}))
-        else:
+                if (hasattr(obj, 'ctnr_set') and
+                        not obj.ctnr_set.exists()):
+                    obj.ctnr_set.add(request.session['ctnr'])
+
+                object_table = tablefy([obj], request=request)
+                return HttpResponse(
+                    json.dumps({'row': object_table}))
+
+        except (ValidationError, ValueError) as e:
+            if form.errors is None:
+                form.errors = ErrorDict()
+            form.errors.update(e.message_dict)
+            return HttpResponse(json.dumps({'errors': form.errors}))
+        except DatabaseError as e:  # DatabaseError(number, description)
+            if form.errors is None:
+                form.errors = ErrorDict()
+            form.errors.setdefault('__all__', []).append(e.args[1])
             return HttpResponse(json.dumps({'errors': form.errors}))
     elif request.method == 'GET':
         object_list = _filter(request, Klass)
