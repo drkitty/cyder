@@ -15,10 +15,6 @@ from cyder.core.cyuser.utils import perm
 import json
 
 
-def is_ajax_form(request):
-    return True
-
-
 def cydns_view(request, pk=None):
     """List, create, update view in one for a flatter heirarchy. """
     # Infer obj_type from URL, saves trouble of having to specify
@@ -42,8 +38,7 @@ def cydns_view(request, pk=None):
                     not obj.ctnr_set.exists()):
                 obj.ctnr_set.add(request.session['ctnr'])
 
-            if is_ajax_form(request):
-                return HttpResponse(json.dumps({'success': True}))
+            return HttpResponse(json.dumps({'success': True}))
         except (ValidationError, ValueError), e:
             if hasattr(e, 'messages'):
                 msgs = e.messages

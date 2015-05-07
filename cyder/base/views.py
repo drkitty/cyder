@@ -133,11 +133,11 @@ def send_email(request):
                       {'form': form})
 
 
-def cy_view(request, template, pk=None, obj_type=None):
+def cy_view(request, template, pk=None):
     """List, create, update view in one for a flatter heirarchy. """
     # Infer obj_type from URL, saves trouble of having to specify
     # kwargs everywhere in the dispatchers.
-    obj_type = obj_type or request.path.split('/')[2]
+    obj_type = request.path.split('/')[2]
 
     Klass, FormKlass = get_klasses(obj_type)
     obj = get_object_or_404(Klass, pk=pk) if pk else None
