@@ -16,63 +16,8 @@ import json
 
 
 def cydns_view(request, pk=None):
-    """List, create, update view in one for a flatter heirarchy. """
-    # Infer obj_type from URL, saves trouble of having to specify
-    # kwargs everywhere in the dispatchers.
-    obj_type = request.path.split('/')[2]
-
-    Klass, FormKlass = get_klasses(obj_type)
-    obj = get_object_or_404(Klass, pk=pk) if pk else None
-
-    if request.method == 'POST':
-        page_obj = None
-
-        form = FormKlass(request.POST, instance=obj)
-        try:
-            if not perm(request, ACTION_CREATE, obj=obj, obj_class=Klass):
-                raise PermissionDenied
-
-            obj = form.save()
-            # If domain, add to current ctnr.
-            if (hasattr(obj, 'ctnr_set') and
-                    not obj.ctnr_set.exists()):
-                obj.ctnr_set.add(request.session['ctnr'])
-
-            return HttpResponse(json.dumps({'success': True}))
-        except (ValidationError, ValueError), e:
-            if hasattr(e, 'messages'):
-                msgs = e.messages
-            else:
-                msgs = [unicode(e)]
-
-            if form._errors is None:
-                form._errors = ErrorDict()
-            form.errors.setdefault('__all__', []).append(msgs)
-
-            return HttpResponse(json.dumps({'errors': form.errors}))
-        except DatabaseError as e:  # DatabaseError(number, description)
-            if form._errors is None:
-                form._errors = ErrorDict()
-            form._errors.setdefault('__all__', []).append(e.args[1])
-            return HttpResponse(json.dumps({'errors': form.errors}))
-    elif request.method == 'GET':
-        form = FormKlass(instance=obj)
-
-        object_list = _filter(request, Klass)
-        page_obj = make_paginator(request, do_sort(request, object_list), 50)
-
-    if issubclass(type(form), UsabilityFormMixin):
-        form.make_usable(request)
-
-    return cy_render(request, 'cydns/cydns_view.html', {
-        'form': form,
-        'obj': obj,
-        'obj_type': obj_type,
-        'object_table': tablefy(page_obj, request=request),
-        'page_obj': page_obj,
-        'pretty_obj_type': Klass.pretty_type,
-        'pk': pk,
-    })
+    from cyder.base.views import cy_view
+    return cy_view(request, 'cydns/cydns_view.html', pk)
 
 
 def cydns_table_update(request, pk, object_type=None):

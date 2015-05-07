@@ -143,9 +143,6 @@ def cy_view(request, template, pk=None):
     obj = get_object_or_404(Klass, pk=pk) if pk else None
     form = None
     if request.method == 'POST':
-        object_table = None
-        page_obj = None
-
         form = FormKlass(request.POST, instance=obj)
 
         if not form.is_valid():
@@ -164,9 +161,7 @@ def cy_view(request, template, pk=None):
                     not obj.ctnr_set.exists()):
                 obj.ctnr_set.add(request.session['ctnr'])
 
-            object_table = tablefy([obj], request=request)
-            return HttpResponse(
-                json.dumps({'row': object_table}))
+            return HttpResponse(json.dumps({'success': True}))
         except (ValidationError, ValueError) as e:
             if hasattr(e, 'messages'):
                 msgs = e.messages
@@ -187,7 +182,6 @@ def cy_view(request, template, pk=None):
         object_list = _filter(request, Klass)
         form = FormKlass(instance=obj)
         page_obj = make_paginator(request, do_sort(request, object_list), 50)
-        object_table = tablefy(page_obj, request=request)
 
     if isinstance(form, UsabilityFormMixin):
         form.make_usable(request)
@@ -196,7 +190,7 @@ def cy_view(request, template, pk=None):
         'form': form,
         'obj': obj,
         'page_obj': page_obj,
-        'object_table': object_table,
+        'object_table': tablefy(page_obj, request=request),
         'obj_type': obj_type,
         'pretty_obj_type': Klass.pretty_type,
         'pk': pk,
