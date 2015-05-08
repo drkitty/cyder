@@ -1,5 +1,6 @@
 from django.conf.urls.defaults import include, patterns, url
 
+from cyder.base.views import search_obj, table_update
 from cyder.cydns.views import *
 from cyder.cydns.constants import DNS_EAV_MODELS
 
@@ -11,7 +12,7 @@ def cydns_urls(obj_type):
         url(r'^$', cydns_view, name=obj_type),
         url(r'(?P<pk>[\w-]+)/update/$', cydns_view,
             name=obj_type + '-update'),
-        url(r'(?P<pk>[\w-]+)/tableupdate/$', cydns_table_update,
+        url(r'(?P<pk>[\w-]+)/tableupdate/$', table_update,
             name=obj_type + '-table-update'),
     )
 
@@ -20,7 +21,7 @@ urlpatterns = patterns(
     '',
     url(r'^$', cydns_index, name='cydns-index'),
 
-    url(r'^record/search/', cydns_search_obj, name='cydns-search-record'),
+    url(r'^record/search/', search_obj, name='cydns-search-record'),
 
     url(r'^address_record/', include('cyder.cydns.address_record.urls')),
     url(r'^cname/', include('cyder.cydns.cname.urls')),
