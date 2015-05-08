@@ -1,8 +1,8 @@
 from django.conf.urls.defaults import include, patterns, url
 from django.views.generic.simple import direct_to_template
 
-from cyder.cydhcp.views import (cydhcp_view, cydhcp_table_update,
-                                cydhcp_search_obj)
+from cyder.base.views import search_obj, table_update
+from cyder.cydhcp.views import cydhcp_view
 from cyder.cydhcp.constants import DHCP_EAV_MODELS
 
 
@@ -13,7 +13,7 @@ def cydhcp_urls(object_type):
         url(r'^$', cydhcp_view, name=object_type),
         url(r'^(?P<pk>[\w-]+)/update/$', cydhcp_view,
             name=object_type + '-update'),
-        url(r'^(?P<pk>[\w-]+)/tableupdate/$', cydhcp_table_update,
+        url(r'^(?P<pk>[\w-]+)/tableupdate/$', table_update,
             name=object_type + '-table-update'),
     )
 
@@ -22,7 +22,7 @@ urlpatterns = patterns(
     '',
     url(r'^$', direct_to_template, {'template': 'cydhcp/cydhcp_index.html'},
         name='cydhcp-index'),
-    url(r'^record/search/', cydhcp_search_obj, name='cydhcp-search-record'),
+    url(r'^record/search/', search_obj, name='cydhcp-search-record'),
     url(r'^build/', include('cyder.cydhcp.build.urls')),
     url(r'^network/', include('cyder.cydhcp.network.urls')),
     url(r'^range/', include('cyder.cydhcp.range.urls')),
