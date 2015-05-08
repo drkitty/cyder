@@ -1,7 +1,6 @@
 from django.conf.urls.defaults import include, patterns, url
-from django.views.generic.simple import direct_to_template
 
-from cyder.base.views import search_obj, table_update
+from cyder.base.views import cy_render, cy_view, search_obj, table_update
 from cyder.cydhcp.views import cydhcp_view
 from cyder.cydhcp.constants import DHCP_EAV_MODELS
 
@@ -10,8 +9,10 @@ def cydhcp_urls(object_type):
     """Url generator for DHCP views"""
     return patterns(
         '',
-        url(r'^$', cydhcp_view, name=object_type),
-        url(r'^(?P<pk>[\w-]+)/update/$', cydhcp_view,
+        url(r'^$', cy_view, {'template': 'cydhcp/cydhcp_view.html'},
+            name=object_type),
+        url(r'^(?P<pk>[\w-]+)/update/$', cy_view,
+            {'template': 'cydhcp/cydhcp_view.html'},
             name=object_type + '-update'),
         url(r'^(?P<pk>[\w-]+)/tableupdate/$', table_update,
             name=object_type + '-table-update'),
@@ -20,9 +21,8 @@ def cydhcp_urls(object_type):
 
 urlpatterns = patterns(
     '',
-    url(r'^$', direct_to_template, {'template': 'cydhcp/cydhcp_index.html'},
+    url(r'^$', cy_render, {'template': 'cydhcp/cydhcp_index.html'},
         name='cydhcp-index'),
-    url(r'^record/search/', search_obj, name='cydhcp-search-record'),
     url(r'^build/', include('cyder.cydhcp.build.urls')),
     url(r'^network/', include('cyder.cydhcp.network.urls')),
     url(r'^range/', include('cyder.cydhcp.range.urls')),

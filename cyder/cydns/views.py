@@ -4,11 +4,6 @@ from cyder.core.cyuser.utils import perm
 import json
 
 
-def cydns_view(request, pk=None):
-    from cyder.base.views import cy_view
-    return cy_view(request, 'cydns/cydns_view.html', pk)
-
-
 def cydns_index(request):
     from cyder.models import (AddressRecord, CNAME, Domain, Nameserver, PTR,
                               MX, SOA, SRV, SSHFP, TXT)
