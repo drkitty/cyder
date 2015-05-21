@@ -20,6 +20,8 @@ class MX(LoggedModel, LabelDomainMixin, CydnsRecord):
                               "record points to.")
     priority = models.PositiveIntegerField(null=False,
                                            validators=[validate_mx_priority])
+    ctnr = models.ForeignKey("cyder.Ctnr", null=False,
+                             verbose_name="Container")
     template = _("{bind_name:$lhs_just} {ttl:$ttl_just}  "
                  "{rdclass:$rdclass_just} "
                  "{rdtype:3} {priority:$prio_just}  "

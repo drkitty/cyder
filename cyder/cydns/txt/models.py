@@ -20,6 +20,8 @@ class TXT(LoggedModel, LabelDomainMixin, CydnsRecord):
         help_text="The text data for this record.",
         validators=[validate_txt_data]
     )
+    ctnr = models.ForeignKey("cyder.Ctnr", null=False,
+                             verbose_name="Container")
 
     search_fields = ("fqdn", "txt_data")
 
