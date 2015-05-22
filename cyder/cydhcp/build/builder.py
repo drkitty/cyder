@@ -11,7 +11,8 @@ from traceback import format_exception
 
 from cyder.base.mixins import MutexMixin
 from cyder.base.utils import (
-    copy_tree, dict_merge, Logger, run_command, set_attrs, shell_out)
+    copy_tree, dict_merge, diff_sanity_check, Logger, run_command, set_attrs,
+    shell_out)
 from cyder.base.vcs import GitRepo
 
 from cyder.core.utils import fail_mail
@@ -82,7 +83,7 @@ class DHCPBuilder(MutexMixin, Logger):
             msg = ('The stop file ({0}) exists. Build canceled.\n'
                    'Reason for skipped build:\n'
                    '{1}'.format(self.stop_file, contents))
-            self.log_notice(msg, to_stderr=False)
+            self.log_notice(msg)
             if (self.stop_file_email_interval is not None and
                     now - last > self.stop_file_email_interval):
                 os.utime(self.stop_file, (now, now))
@@ -90,7 +91,7 @@ class DHCPBuilder(MutexMixin, Logger):
 
             raise Exception(msg)
         except IOError as e:
-            if e.errno == errno.ENOENT:  # IOError: [Errno 2] No such file or directory
+            if e.errno == errno.ENOENT:  # 'No such file or directory'
                 pass
             else:
                 raise
@@ -121,7 +122,11 @@ class DHCPBuilder(MutexMixin, Logger):
         self.log_info('DHCP build successful')
 
     def push(self, sanity_check=True):
-        self.repo.reset_and_pull()
+        if self.use_git:
+            self.repo.reset_and_pull()
+        elif sanity_check:
+            diff_sanity_check(self.prod_dir, self.stage_dir,
+                self.line_decrease_limit, self.line_increase_limit)
 
         try:
             copy_tree(self.stage_dir, self.prod_dir)
@@ -129,7 +134,9 @@ class DHCPBuilder(MutexMixin, Logger):
             self.repo.reset_to_head()
             raise
 
-        self.repo.commit_and_push('Update config', sanity_check=sanity_check)
+        if self.use_git:
+            self.repo.commit_and_push('Update config',
+                sanity_check=sanity_check)
 
     def check_syntax(self, ip_type, filename):
         out, err, ret = run_command("{} -{} -t -cf {}".format(

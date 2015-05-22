@@ -2,11 +2,8 @@ import os
 import re
 from os.path import dirname, basename
 
-from cyder.base.utils import dict_merge, Logger, run_command
-
-
-class SanityCheckFailure(Exception):
-    pass
+from cyder.base.utils import (
+    dict_merge, Logger, run_command, SanityCheckFailure)
 
 
 class ChdirHandler(object):

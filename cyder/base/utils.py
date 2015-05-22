@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import syslog
 from copy import copy
+from os import path
 from sys import stderr
 
 import MySQLdb
@@ -168,8 +169,10 @@ def _filter(request, Klass):
     return objects.distinct()
 
 
-def remove_dir_contents(dir_name):
+def remove_dir_contents(dir_name, dotfiles=False):
     for file_name in os.listdir(dir_name):
+        if not dotfiles and file_name[0] == '.':
+            continue
         file_path = os.path.join(dir_name, file_name)
         if os.path.isdir(file_path):
             shutil.rmtree(file_path)
@@ -260,3 +263,42 @@ def get_cursor(alias, use=True):
     if not use:
         del kwargs['db']
     return MySQLdb.connect(**kwargs).cursor(), conf
+
+
+class SanityCheckFailure(Exception):
+    pass
+
+
+def diff_sanity_check(old, new, line_decrease_limit, line_increase_limit):
+    counts = [0, 0]
+
+    # For each tree...
+    for t in range(2):
+        # For each directory in this tree, including the root...
+        for dirpath, dirnames, filenames in os.walk((old, new)[t]):
+            # Skip dot ("hidden") directories.
+            dirnames_copy = dirnames[:]
+            for i in range(len(dirnames_copy)):
+                if dirnames_copy[i][0] == '.':
+                    del dirnames[i]
+
+            # Count lines.
+            for filename in filenames:
+                with open(path.join(dirpath, filename)) as f:
+                    while True:
+                        chunk = f.read(4096)
+                        if chunk == '':
+                            break
+                        counts[t] += chunk.count('\n')
+
+    diff = counts[1] - counts[0]
+    if -diff > line_decrease_limit:
+        raise SanityCheckFailure(
+            'Line count decrease ({0}) exceeded limit ({1}).\n'
+            'Aborting commit.\n'.format(
+                -diff, line_decrease_limit))
+    if diff > line_increase_limit:
+        raise SanityCheckFailure(
+            'Line count increase ({0}) exceeded limit ({1}).\n'
+            'Aborting commit.\n'.format(
+                diff, line_increase_limit))

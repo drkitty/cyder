@@ -13,7 +13,8 @@ from cyder.settings import BINDBUILD, ZONES_WITH_NO_CONFIG
 
 from cyder.base.mixins import MutexMixin
 from cyder.base.utils import (
-    copy_tree, dict_merge, Logger, remove_dir_contents, run_command, set_attrs)
+    copy_tree, dict_merge, diff_sanity_check, Logger, remove_dir_contents,
+    run_command, set_attrs)
 from cyder.base.vcs import GitRepo
 
 from cyder.core.task.models import Task
@@ -452,7 +453,7 @@ class DNSBuilder(MutexMixin, Logger):
 
             raise Exception(msg)
         except IOError as e:
-            if e.errno != errno.ENOENT:  # IOError: [Errno 2] No such file or directory
+            if e.errno != errno.ENOENT:  # 'No such file or directory'
                 raise
 
         self.log_info('Building...')
@@ -477,7 +478,11 @@ class DNSBuilder(MutexMixin, Logger):
             raise
 
     def push(self, sanity_check=True):
-        self.repo.reset_and_pull()
+        if self.use_git:
+            self.repo.reset_and_pull()
+        elif sanity_check:
+            diff_sanity_check(self.prod_dir, self.stage_dir,
+                self.line_decrease_limit, self.line_increase_limit)
 
         try:
             copy_tree(self.stage_dir, self.prod_dir)
@@ -485,7 +490,9 @@ class DNSBuilder(MutexMixin, Logger):
             self.repo.reset_to_head()
             raise
 
-        self.repo.commit_and_push('Update config', sanity_check=sanity_check)
+        if self.use_git:
+            self.repo.commit_and_push('Update config',
+                sanity_check=sanity_check)
         map(lambda t: t.delete(), self.dns_tasks)
 
     def _lock_failure(self, pid):

@@ -513,12 +513,14 @@ REST_FRAMEWORK = {
 
 
 BINDBUILD = {
+    'use_git': False,
+
     # stage_dir: Where test builds should go. This shouldn't be under
     # version control.
     'stage_dir': '/tmp/dns_stage/',
 
     # prod_dir: This is the directory where Cyder will place its DNS files.
-    # This should be a Git repo.
+    # If use_git is true, this should be a Git repo.
     'prod_dir': '/tmp/dns_prod/cyzones/',
 
     # bind_prefix: This is the path to where Cyder zone files are built
@@ -549,12 +551,14 @@ BINDBUILD = {
 
 
 DHCPBUILD = {
+    'use_git': False,
+
     # stage_dir: Where test builds should go. This shouldn't be under
     # version control.
     'stage_dir': '/tmp/dhcp/stage',
 
-    # prod_dir: Where Cyder will place the dhcpd configuration file. This
-    # should be a Git repo.
+    # prod_dir: Where Cyder will place the dhcpd configuration file. If use_git
+    # is true, this should be a Git repo.
     'prod_dir': '/tmp/dhcp/prod',
 
     'lock_file': '/tmp/cyder_dhcp.lock',
@@ -583,6 +587,10 @@ DHCPBUILD = {
 
     'log_syslog': False,
 }
+
+
+# miscellaneous
+# =============
 
 
 DATETIME_INPUT_FORMATS = (
