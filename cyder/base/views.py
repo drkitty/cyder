@@ -141,7 +141,6 @@ def cy_view(request, template, pk=None):
 
     Klass, FormKlass = get_klasses(obj_type)
     obj = get_object_or_404(Klass, pk=pk) if pk else None
-    form = None
     if request.method == 'POST':
         form = FormKlass(request.POST, instance=obj)
 
@@ -149,7 +148,8 @@ def cy_view(request, template, pk=None):
             return HttpResponse(json.dumps({'errors': form.errors}))
 
         try:
-            if not perm(request, ACTION_CREATE, obj=obj, obj_class=Klass):
+            action = ACTION_CREATE if obj is None else ACTION_UPDATE
+            if not perm(request, action, obj=obj, obj_class=Klass):
                 raise PermissionDenied
 
             obj = form.save()
