@@ -131,7 +131,8 @@ class DHCPBuilder(MutexMixin, Logger):
         try:
             copy_tree(self.stage_dir, self.prod_dir)
         except:
-            self.repo.reset_to_head()
+            if self.use_git:
+                self.repo.reset_to_head()
             raise
 
         if self.use_git:

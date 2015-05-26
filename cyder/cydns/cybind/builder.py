@@ -486,13 +486,14 @@ class DNSBuilder(MutexMixin, Logger):
 
         try:
             copy_tree(self.stage_dir, self.prod_dir)
+            if self.use_git:
+                self.repo.commit_and_push('Update config',
+                    sanity_check=sanity_check)
         except:
-            self.repo.reset_to_head()
+            if self.use_git:
+                self.repo.reset_to_head()
             raise
 
-        if self.use_git:
-            self.repo.commit_and_push('Update config',
-                sanity_check=sanity_check)
         map(lambda t: t.delete(), self.dns_tasks)
 
     def _lock_failure(self, pid):
