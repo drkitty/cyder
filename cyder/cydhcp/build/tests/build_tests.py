@@ -1,12 +1,11 @@
 import os
+
 from django.test import TestCase
 
 from cyder.base.eav.models import Attribute
 from cyder.base.utils import copy_tree, remove_dir_contents
 from cyder.base.vcs import GitRepo, GitRepoManager, SanityCheckFailure
-
 from cyder.core.system.models import System
-
 from cyder.cydhcp.build.builder import DHCPBuilder
 from cyder.cydhcp.interface.dynamic_intr.models import DynamicInterface
 from cyder.cydhcp.network.models import Network, NetworkAV
@@ -14,6 +13,7 @@ from cyder.cydhcp.range.models import Range
 
 
 DHCPBUILD = {
+    'use_git': True,
     'stage_dir': '/tmp/cyder_dhcp_test/stage',
     'prod_dir': '/tmp/cyder_dhcp_test/prod',
     'lock_file': '/tmp/cyder_dhcp_test.lock',
@@ -44,11 +44,11 @@ class DHCPBuildTest(TestCase):
 
         if not os.path.isdir(DHCPBUILD['prod_dir']):
             os.makedirs(DHCPBUILD['prod_dir'])
-        remove_dir_contents(DHCPBUILD['prod_dir'])
+        remove_dir_contents(DHCPBUILD['prod_dir'], dotfiles=True)
 
         if not os.path.isdir(PROD_ORIGIN_DIR):
             os.makedirs(PROD_ORIGIN_DIR)
-        remove_dir_contents(PROD_ORIGIN_DIR)
+        remove_dir_contents(PROD_ORIGIN_DIR, dotfiles=True)
 
         mgr = GitRepoManager(config={
             'user.name': 'test',

@@ -1,8 +1,8 @@
 import os
-import shutil
+from time import sleep
+
 from django.core.management import call_command
 from django.test import TestCase
-from time import sleep
 
 from cyder.base.utils import remove_dir_contents
 from cyder.base.vcs import GitRepo, GitRepoManager, SanityCheckFailure
@@ -16,6 +16,7 @@ from cyder.cydns.view.models import View
 
 
 BINDBUILD = {
+    'use_git': True,
     'stage_dir': '/tmp/cyder_dns_test/stage',
     'prod_dir': '/tmp/cyder_dns_test/prod',
     'bind_prefix': '',
@@ -41,11 +42,11 @@ class DNSBuildTest(TestCase):
 
         if not os.path.isdir(BINDBUILD['prod_dir']):
             os.makedirs(BINDBUILD['prod_dir'])
-        remove_dir_contents(BINDBUILD['prod_dir'])
+        remove_dir_contents(BINDBUILD['prod_dir'], dotfiles=True)
 
         if not os.path.isdir(PROD_ORIGIN_DIR):
             os.makedirs(PROD_ORIGIN_DIR)
-        remove_dir_contents(PROD_ORIGIN_DIR)
+        remove_dir_contents(PROD_ORIGIN_DIR, dotfiles=True)
 
         mgr = GitRepoManager(config={
             'user.name': 'test',
@@ -167,4 +168,3 @@ class DNSBuildTest(TestCase):
         self.builder.repo.line_decrease_limit = 100
         self.builder.build()
         self.builder.push(sanity_check=True)
-
