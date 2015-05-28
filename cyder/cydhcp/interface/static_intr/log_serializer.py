@@ -16,4 +16,3 @@ class StaticInterfaceLogSerializer(BaseLogSerializer):
         fields = ('name', 'mac', 'reverse_domain', 'system', 'workgroup',
                   'dhcp_enabled', 'dns_enabled', 'ip', 'last_save_user',
                   'description', 'expire')
-
