@@ -27,7 +27,6 @@ class Vlan(LoggedModel, BaseModel, ObjectUrlMixin):
 
     search_fields = ('name', 'number',)
     display_fields = ('name',)
-    audit_fields = 'name', 'number'
     sort_fields = ('name',)
 
     class Meta:

@@ -34,8 +34,6 @@ class DynamicInterface(LoggedModel, BaseModel, ObjectUrlMixin, ExpirableMixin):
                                        verbose_name='Enable DHCP?')
     last_seen = models.DateTimeField(null=True, blank=True)
     search_fields = ('mac', 'system__name')
-    audit_fields = ('workgroup', 'system', 'mac', 'range',
-                    'dhcp_enabled', 'last_seen', 'modified', 'expire')
 
     def serializer(self):
         from cyder.cydhcp.interface.dynamic_intr.log_serializer import \

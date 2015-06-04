@@ -48,9 +48,6 @@ class Serializable(object):
 class LoggedModel(Serializable, models.Model):
     """Allows changes to objects to be logged for auditing purposes.
 
-    Objects inheriting from this class must specify an attribute audit_fields
-    listing the names of fields to be logged as strings.
-
     On deletion, a LoggedModel object will cause the creation of a DeleteLog
     entry, which will record the deleted object's class name, date of deletion,
     and the data contained in the deleted object's log.

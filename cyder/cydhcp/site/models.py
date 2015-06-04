@@ -20,7 +20,6 @@ class Site(BaseModel, ObjectUrlMixin):
 
     search_fields = ('name', 'parent__name')
     display_fields = ('name',)
-    audit_fields = 'name', 'parent'
     sort_fields = ('name',)
 
     class Meta:

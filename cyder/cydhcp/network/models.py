@@ -53,9 +53,6 @@ class Network(LoggedModel, BaseModel, ObjectUrlMixin):
     network = None
 
     search_fields = ('vlan__name', 'site__name', 'network_str')
-    audit_fields = ('id', 'vlan', 'site', 'vrf', 'ip_type', 'ip_upper',
-                    'ip_lower', 'network_str', 'prefixlen', 'enabled',
-                    'dhcpd_raw_include')
     sort_fields = ('ip_lower',)
 
     class Meta:

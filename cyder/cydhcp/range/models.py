@@ -98,9 +98,6 @@ class Range(LoggedModel, BaseModel, ViewMixin, ObjectUrlMixin):
     range_usage = models.IntegerField(max_length=3, null=True, blank=True)
 
     search_fields = ('start_str', 'end_str', 'name')
-    audit_fields = ('network', 'range_type', 'ip_type', 'start_str', 'end_str',
-                    'domain', 'is_reserved', 'allow', 'dhcpd_raw_include',
-                    'dhcp_enabled', 'name', 'description', 'range_usage')
     sort_fields = ('start_lower', 'end_lower')
 
     class Meta:
