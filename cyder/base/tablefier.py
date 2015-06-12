@@ -113,6 +113,8 @@ class Tablefier:
         try:
             if type(value) in [str, unicode]:
                 from cyder.cydhcp.range.utils import find_range
+                find_range(value)
+                import pdb; pdb.set_trace()
                 value = find_range(value)
             return value.get_detail_url()
         except (AttributeError, ValueError):

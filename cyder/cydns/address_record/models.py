@@ -187,9 +187,14 @@ class AddressRecord(BaseAddressRecord):
         data['data'] = [
             ('Label', 'label', self.label),
             ('Domain', 'domain__name', self.domain),
-            ('IP', 'ip_lower', str(self.ip_str)),
+            ('IP', 'ip_lower', self.range),
         ]
         return data
+
+    @property
+    def range(self):
+        if self.ip_str:
+            return find_range(self.ip_str)
 
     def cyder_unique_error_message(self, model_class, unique_check):
         if unique_check == ('label', 'domain', 'fqdn', 'ip_upper', 'ip_lower',
