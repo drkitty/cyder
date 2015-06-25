@@ -159,10 +159,15 @@ class PTR(BaseModel, BasePTR, Ip, ViewMixin, DisplayMixin, ObjectUrlMixin):
     ctnr = models.ForeignKey("cyder.Ctnr", null=False,
                              verbose_name="Container")
 
-    template = _("{reverse_domain:$lhs_just} {ttl:$ttl_just}  "
-                 "{rdclass:$rdclass_just} "
-                 "{rdtype:$rdtype_just} {bind_name:1}")
     search_fields = ('ip_str', 'fqdn')
+
+    dns_build_info = {
+        'name': ('name', '.'),
+        'ttl': ('ttl', ''),
+        'class': (None, 'IN'),
+        'type': (None, 'PTR'),
+        'rdata': ('fqdn', ''),
+    }
 
     class Meta:
         app_label = 'cyder'
@@ -171,6 +176,15 @@ class PTR(BaseModel, BasePTR, Ip, ViewMixin, DisplayMixin, ObjectUrlMixin):
 
     def __unicode__(self):
         return u'{} PTR {}'.format(self.ip_str, self.fqdn)
+
+    @property
+    def name(self):
+        if self.ip_type == '6':
+            ip = "%x" % ((self.ip_upper << 64) | self.ip_lower)
+            return '.'.join(reversed(ip)) + ".ip6.arpa."
+        else:
+            return ('.'.join(reversed(self.ip_str.split('.'))) +
+                              '.in-addr.arpa.')
 
     @staticmethod
     def filter_by_ctnr(ctnr, objects=None):
@@ -188,17 +202,6 @@ class PTR(BaseModel, BasePTR, Ip, ViewMixin, DisplayMixin, ObjectUrlMixin):
     def range(self):
         rng = find_range(self.ip_str)
         return rng
-
-    def bind_render_record(self):
-        if self.ip_type == '6':
-            ip = "%x" % ((self.ip_upper << 64) | self.ip_lower)
-            reverse_domain = '.'.join(reversed(ip)) + ".ip6.arpa."
-        else:
-            reverse_domain = ('.'.join(reversed(self.ip_str.split('.'))) +
-                              '.in-addr.arpa.')
-
-        return super(PTR, self).bind_render_record(
-            custom={'reverse_domain': reverse_domain})
 
     @transaction_atomic
     def save(self, *args, **kwargs):

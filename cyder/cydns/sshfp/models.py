@@ -34,12 +34,17 @@ class SSHFP(LabelDomainMixin, CydnsRecord):
     ctnr = models.ForeignKey("cyder.Ctnr", null=False,
                              verbose_name="Container")
 
-    template = _("{bind_name:$lhs_just} {ttl:$ttl_just}  "
-                 "{rdclass:$rdclass_just} "
-                 "{rdtype:$rdtype_just} {algorithm_number} {fingerprint_type} "
-                 "{key:$rhs_just}")
-
     search_fields = ("fqdn", "key")
+
+    dns_build_info = {
+        'name': ('fqdn', '.'),
+        'ttl': ('ttl', ''),
+        'class': (None, 'IN'),
+        'type': (None, 'SSHFP'),
+        'algorithm': ('algorithm_number', ''),
+        'fp_type': ('fingerprint_type', ''),
+        'rdata': ('key', ''),
+    }
 
     class Meta:
         app_label = 'cyder'

@@ -10,32 +10,32 @@ from cyder.base.utils import filter_by_ctnr
 
 
 class DisplayMixin(object):
-    # Knobs
-    justs = {
-        'pk_just':      10,
-        'rhs_just':     1,
-        'ttl_just':     6,
-        'rdtype_just':  7,
-        'rdclass_just': 3,
-        'prio_just':    2,
-        'lhs_just':     61,
-        'extra_just':   1
-    }
+    def dns_build(self):
+        ss = ['']
+        widths = {
+            'name': 30,
+            'type': 10,
+            'class': 8,
+            'ttl': 10,
+            'priority': 6,
+            'weight': 4,
+            'port': 8,
+            'algorithm': 3,
+            'fp_type': 3,
+            'rdata': 0,
+        }
+
+        for x in ('name', 'ttl', 'class', 'type', 'priority', 'weight', 'port',
+                'rdata'):
+            field, suffix = self.dns_build_info.get(x, (None, ''))
+            ss.append(str(getattr(self, field) if field else '') + suffix)
+            ss.append(' ' * max(0, widths[x] - len(ss[-1])))
+
+        return ''.join(ss)
+
 
     def bind_render_record(self, pk=False, custom=None):
-        kwargs = vars(self)
-        if custom:
-            for key, value in custom.items():
-                kwargs[key] = value
-
-        template = Template(self.template).substitute(**self.justs)
-        bind_name = self.fqdn + "."
-
-        if not self.ttl:
-            self.ttl = 3600
-
-        return template.format(bind_name=bind_name, rdtype=self.rdtype,
-                               rdclass='IN', **kwargs)
+        return self.dns_build()
 
 
 class ObjectUrlMixin(object):

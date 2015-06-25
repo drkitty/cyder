@@ -47,11 +47,15 @@ class Nameserver(CydnsRecord):
     intr_glue = models.ForeignKey(StaticInterface, null=True, blank=True,
                                   related_name="nameserver_set")
 
-    template = _("{bind_name:$lhs_just} {ttl:$ttl_just}  "
-                 "{rdclass:$rdclass_just} "
-                 "{rdtype:$rdtype_just} {server:$rhs_just}.")
-
     search_fields = ("server", "domain__name")
+
+    dns_build_info = {
+        'name': ('name', '.'),
+        'ttl': ('ttl', ''),
+        'class': (None, 'IN'),
+        'type': (None, 'NS'),
+        'rdata': ('server', ''),
+    }
 
     class Meta:
         app_label = 'cyder'
@@ -61,6 +65,10 @@ class Nameserver(CydnsRecord):
     def __unicode__(self):
         return u'{} NS {}'.format(self.domain.name, self.server)
 
+    @property
+    def name(self):
+        return self.domain.name
+
     @staticmethod
     def filter_by_ctnr(ctnr, objects=None):
         objects = objects or Nameserver.objects
@@ -69,18 +77,6 @@ class Nameserver(CydnsRecord):
 
     def get_ctnrs(self):
         raise TypeError("This object has no container.")
-
-    @property
-    def rdtype(self):
-        return 'NS'
-
-    def bind_render_record(self, pk=False, **kwargs):
-        # We need to override this because fqdn is actually self.domain.name
-        template = Template(self.template).substitute(**self.justs)
-        return template.format(
-            rdtype=self.rdtype, rdclass='IN', bind_name=self.domain.name + '.',
-            **self.__dict__
-        )
 
     def details(self):
         """For tables."""

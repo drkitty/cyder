@@ -38,13 +38,18 @@ class SRV(CydnsRecord, LabelDomainUtilsMixin):
     ctnr = models.ForeignKey("cyder.Ctnr", null=False,
                              verbose_name="Container")
 
-    template = _("{bind_name:$lhs_just} {ttl:$ttl_just}  "
-                 "{rdclass:$rdclass_just} "
-                 "{rdtype:$rdtype_just} {priority:$prio_just} "
-                 "{weight:$extra_just} {port:$extra_just} "
-                 "{target:$extra_just}.")
-
     search_fields = ("fqdn", "target")
+
+    dns_build_info = {
+        'name': ('fqdn', '.'),
+        'ttl': ('ttl', ''),
+        'class': (None, 'IN'),
+        'type': (None, 'SRV'),
+        'priority': ('priority', ''),
+        'weight': ('weight', ''),
+        'port': ('port', ''),
+        'rdata': ('target', ''),
+    }
 
     def details(self):
         """For tables."""
@@ -78,10 +83,6 @@ class SRV(CydnsRecord, LabelDomainUtilsMixin):
         app_label = 'cyder'
         db_table = 'srv'
         unique_together = ("label", "domain", "target", "port")
-
-    @property
-    def rdtype(self):
-        return 'SRV'
 
     @transaction_atomic
     def save(self, *args, **kwargs):

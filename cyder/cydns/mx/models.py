@@ -21,11 +21,16 @@ class MX(LabelDomainMixin, CydnsRecord):
                                            validators=[validate_mx_priority])
     ctnr = models.ForeignKey("cyder.Ctnr", null=False,
                              verbose_name="Container")
-    template = _("{bind_name:$lhs_just} {ttl:$ttl_just}  "
-                 "{rdclass:$rdclass_just} "
-                 "{rdtype:3} {priority:$prio_just}  "
-                 "{server:$rhs_just}.")
     search_fields = ('fqdn', 'server')
+
+    dns_build_info = {
+        'name': ('fqdn', '.'),
+        'ttl': ('ttl', ''),
+        'class': (None, 'IN'),
+        'type': (None, 'MX'),
+        'priority': ('priority', ''),
+        'rdata': ('server', ''),
+    }
 
     class Meta:
         app_label = 'cyder'
@@ -57,10 +62,6 @@ class MX(LabelDomainMixin, CydnsRecord):
             {'name': 'priority', 'datatype': 'integer', 'editable': True},
             {'name': 'ttl', 'datatype': 'integer', 'editable': True},
         ]}
-
-    @property
-    def rdtype(self):
-        return 'MX'
 
     @transaction_atomic
     def save(self, *args, **kwargs):

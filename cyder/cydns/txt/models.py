@@ -24,6 +24,14 @@ class TXT(LabelDomainMixin, CydnsRecord):
 
     search_fields = ("fqdn", "txt_data")
 
+    dns_build_info = {
+        'name': ('fqdn', '.'),
+        'ttl': ('ttl', ''),
+        'class': (None, 'IN'),
+        'type': (None, 'A'),
+        'rdata': ('fixme', ''),
+    }
+
     class Meta:
         app_label = 'cyder'
         db_table = 'txt'
@@ -54,10 +62,6 @@ class TXT(LabelDomainMixin, CydnsRecord):
             {'name': 'domain', 'datatype': 'string', 'editable': True},
             {'name': 'txt_data', 'datatype': 'string', 'editable': True},
         ]}
-
-    template = _("{bind_name:$lhs_just} {ttl:$ttl_just}  "
-                 "{rdclass:$rdclass_just} "
-                 "{rdtype:$rdtype_just} {txt_data:$rhs_just}")
 
     @property
     def escaped_txt_data(self):

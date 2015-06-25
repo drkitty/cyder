@@ -19,24 +19,25 @@ class CNAME(LabelDomainMixin, CydnsRecord):
     checked to make sure that the name about to be taken by the CNAME
     isn't taken by another record. Likewise, all other records must
     check that no CNAME exists with the same name before being created.
-
-    >>> CNAME(label = label, domain = domain, target = target)
-
     """
+    # TODO cite an RFC for that ^ (it's around somewhere)
 
     pretty_type = 'CNAME'
 
-    # TODO cite an RFC for that ^ (it's around somewhere)
     id = models.AutoField(primary_key=True)
     target = models.CharField(max_length=100, validators=[validate_fqdn])
     ctnr = models.ForeignKey("cyder.Ctnr", null=False,
                              verbose_name="Container")
-    template = _("{bind_name:$lhs_just} {ttl:$ttl_just}  "
-                 "{rdclass:$rdclass_just} "
-                 "{rdtype:$rdtype_just} {target:$rhs_just}.")
-
     search_fields = ('fqdn', 'target')
     sort_fields = ('fqdn', 'target')
+
+    dns_build_info = {
+        'name': ('fqdn', '.'),
+        'ttl': ('ttl', ''),
+        'class': (None, 'IN'),
+        'type': (None, 'CNAME'),
+        'rdata': ('target', ''),
+    }
 
     class Meta:
         app_label = 'cyder'

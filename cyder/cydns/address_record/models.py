@@ -173,9 +173,13 @@ class AddressRecord(BaseAddressRecord):
     ctnr = models.ForeignKey("cyder.Ctnr", null=False,
                              verbose_name="Container")
 
-    template = _("{bind_name:$lhs_just} {ttl:$ttl_just}  "
-                 "{rdclass:$rdclass_just} "
-                 "{rdtype:$rdtype_just} {ip_str:$rhs_just}")
+    dns_build_info = {
+        'name': ('fqdn', '.'),
+        'ttl': ('ttl', ''),
+        'class': (None, 'IN'),
+        'type': (None, 'A'),
+        'rdata': ('ip_str', ''),
+    }
 
     class Meta:
         app_label = 'cyder'
