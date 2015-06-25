@@ -48,8 +48,8 @@ class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
         >>> SOA(primary=primary, contact=contact, retry=retry,
         ... refresh=refresh, description=description)
 
-    Each DNS zone must have it's own SOA object. Use the description field to
-    remind yourself which zone an SOA corresponds to if different SOA's have a
+    Each DNS zone must have its own SOA object. Use the description field to
+    remind yourself which zone an SOA corresponds to if different SOAs have a
     similar ``primary`` and ``contact`` value.
     """
 
