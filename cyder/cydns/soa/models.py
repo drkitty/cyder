@@ -115,7 +115,7 @@ class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
             ')\n'  # blank line after
         ]
 
-        is_reverse = self.root_domain.is_reverse)
+        is_reverse = self.root_domain.is_reverse
 
         for d in self.domain_set.all():
             records = chain(
@@ -131,10 +131,16 @@ class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
             for rec in records:
                 ss.append(rec.dns_build())
 
-            reversible_records = chain(
-                d.range_set.filter(views=view),
-                d.staticinterface_set.filter(views=view),
-            )
+            if is_reverse:
+                reversible_records = chain(
+                    d.range_set.filter(views=view),
+                    d.reverse_staticintr_set.filter(views=view),
+                )
+            else:
+                reversible_records = chain(
+                    d.range_set.filter(views=view),
+                    d.staticinterface_set.filter(views=view),
+                )
 
             for rec in reversible_records:
                 ss.append(rec.dns_build(reverse=is_reverse))

@@ -72,14 +72,6 @@ class StaticInterface(BaseAddressRecord, BasePTR, ExpirableMixin):
 
     search_fields = ('mac', 'ip_str', 'fqdn')
 
-    dns_build_info = {
-        'name': ('fqdn', '.'),
-        'ttl': ('ttl', ''),
-        'class': (None, 'IN'),
-        'type': (None, 'A'),
-        'rdata': ('ip_str', ''),
-    }
-
     class Meta:
         app_label = 'cyder'
         db_table = 'static_interface'
@@ -125,9 +117,26 @@ class StaticInterface(BaseAddressRecord, BasePTR, ExpirableMixin):
             {'name': 'fqdn', 'datatype': 'string', 'editable': False},
         ]}
 
-    @property
-    def rdtype(self):
-        return 'INTR'
+    def dns_build(self, reverse):
+        from cyder.cydns.utils import render_dns_record
+
+        if reverse:
+            return render_dns_record(self, {
+                'name': ('', ip_to_reverse_name(self.ip_str) + '.'),
+                'ttl': ('ttl', ''),
+                'class': (None, 'IN'),
+                'type': (None, 'PTR'),
+                'rdata': ('fqdn', ''),
+            })
+        else:
+            return render_dns_record(self, {
+                'name': ('fqdn', '.'),
+                'ttl': ('ttl', ''),
+                'class': (None, 'IN'),
+                'type': (None, 'A'),
+                'rdata': ('ip_str', ''),
+            })
+
 
     def get_related_systems(self):
         related_interfaces = StaticInterface.objects.filter(mac=self.mac)
@@ -261,19 +270,3 @@ class StaticInterface(BaseAddressRecord, BasePTR, ExpirableMixin):
             raise ValidationError(
                 "This Interface represents a glue record for a "
                 "Nameserver. Change the Nameserver to edit this record.")
-
-    a_template = _("{bind_name:$lhs_just} {ttl:$ttl_just}  "
-                   "{rdclass:$rdclass_just}"
-                   " {rdtype_clob:$rdtype_just} {ip_str:$rhs_just}")
-    ptr_template = _("{dns_ip:$lhs_just} {ttl:$ttl_just}  "
-                     "{rdclass:$rdclass_just}"
-                     " {rdtype_clob:$rdtype_just} {fqdn:1}.")
-
-    def bind_render_record(self, pk=False, **kwargs):
-        self.rdtype_clob = kwargs.pop('rdtype', 'INTR')
-        if kwargs.pop('reverse', False):
-            self.template = self.ptr_template
-            self.dns_ip = ip_to_reverse_name(self.ip_str) + '.'
-        else:
-            self.template = self.a_template
-        return super(StaticInterface, self).bind_render_record(pk=pk, **kwargs)
