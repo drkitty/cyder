@@ -103,11 +103,37 @@ class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
         # being assigned to multiple zones. See the documentation in the
         # Domain models.py file for more info.
 
-    def bind_render_record(self):
-        template = Template(self.template).substitute(**self.justs)
-        return template.format(root_domain=self.root_domain,
-                               rdtype=self.rdtype, rdclass='IN',
-                               **self.__dict__)
+    @property
+    def name(self):
+        return self.root_domain.name
+
+    def dns_build(self, view):
+        ss = [
+            '{}.  {}  IN  SOA  {}. {}. (\n'.format(
+                self.root_domain.name, self.ttl, self.primary, self.contact) +
+            '\t\t{}     ; Serial\n'.format(self.serial) +
+            '\t\t{}     ; Refresh\n'.format(self.refresh) +
+            '\t\t{}     ; Retry\n'.format(self.retry) +
+            '\t\t{}     ; Expire\n'.format(self.expire) +
+            '\t\t{}     ; Minimum\n'.format(self.minimum) +
+            ')\n\n'
+        ]
+
+        for d in self.domain_set.all():
+            records = chain(
+                d.addressrecord_set.filter(views=view),
+                d.cname_set.filter(views=view),
+                d.mx_set.filter(views=view),
+                d.srv_set.filter(views=view),
+                d.sshfp_set.filter(views=view),
+                d.staticinterface_set.filter(views=view),
+                d.txt_set.filter(views=view),
+                d.reverse_ptr_set.filter(views=view),
+            )
+            for rec in records:
+                ss.append(rec.dns_build() + '\n')
+
+        return ''.join(ss)
 
     def __unicode__(self):
         return self.root_domain.name

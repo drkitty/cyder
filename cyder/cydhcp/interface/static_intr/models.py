@@ -72,6 +72,14 @@ class StaticInterface(BaseAddressRecord, BasePTR, ExpirableMixin):
 
     search_fields = ('mac', 'ip_str', 'fqdn')
 
+    dns_build_info = {
+        'name': ('fqdn', '.'),
+        'ttl': ('ttl', ''),
+        'class': (None, 'IN'),
+        'type': (None, 'CNAME'),
+        'rdata': ('ip_str', ''),
+    }
+
     class Meta:
         app_label = 'cyder'
         db_table = 'static_interface'

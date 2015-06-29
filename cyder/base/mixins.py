@@ -11,31 +11,26 @@ from cyder.base.utils import filter_by_ctnr
 
 class DisplayMixin(object):
     def dns_build(self):
-        ss = ['']
         widths = {
-            'name': 30,
-            'type': 10,
-            'class': 8,
-            'ttl': 10,
-            'priority': 6,
-            'weight': 4,
+            'name': 64,
+            'ttl': 6,
+            'class': 4,
+            'type': 5,
+            'priority': 2,
+            'weight': 2,
             'port': 8,
             'algorithm': 3,
             'fp_type': 3,
             'rdata': 0,
         }
 
+        ss = ['']
         for x in ('name', 'ttl', 'class', 'type', 'priority', 'weight', 'port',
-                'rdata'):
+                'algorithm', 'fp_type', 'rdata'):
             field, suffix = self.dns_build_info.get(x, (None, ''))
             ss.append(str(getattr(self, field) if field else '') + suffix)
             ss.append(' ' * max(0, widths[x] - len(ss[-1])))
-
         return ''.join(ss)
-
-
-    def bind_render_record(self, pk=False, custom=None):
-        return self.dns_build()
 
 
 class ObjectUrlMixin(object):
