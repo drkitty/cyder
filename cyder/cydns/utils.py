@@ -207,3 +207,26 @@ def get_zones():
     respective zones."""
     return Domain.objects.filter(~Q(master_domain__soa=F('soa')),
                                  soa__isnull=False)
+
+
+def render_dns_record(obj, info):
+    widths = {
+        'name': 64,
+        'ttl': 6,
+        'class': 4,
+        'type': 5,
+        'priority': 2,
+        'weight': 2,
+        'port': 8,
+        'algorithm': 3,
+        'fp_type': 3,
+        'rdata': 0,
+    }
+
+    ss = ['']
+    for x in ('name', 'ttl', 'class', 'type', 'priority', 'weight', 'port',
+            'algorithm', 'fp_type', 'rdata'):
+        field, suffix = info.get(x, (None, ''))
+        ss.append(str(getattr(obj, field) if field else '') + suffix)
+        ss.append(' ' * max(0, widths[x] - len(ss[-1])))
+    return ''.join(ss)

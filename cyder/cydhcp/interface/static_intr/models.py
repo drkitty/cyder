@@ -76,7 +76,7 @@ class StaticInterface(BaseAddressRecord, BasePTR, ExpirableMixin):
         'name': ('fqdn', '.'),
         'ttl': ('ttl', ''),
         'class': (None, 'IN'),
-        'type': (None, 'CNAME'),
+        'type': (None, 'A'),
         'rdata': ('ip_str', ''),
     }
 

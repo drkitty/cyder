@@ -103,10 +103,6 @@ class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
         # being assigned to multiple zones. See the documentation in the
         # Domain models.py file for more info.
 
-    @property
-    def name(self):
-        return self.root_domain.name
-
     def dns_build(self, view):
         ss = [
             '{}.  {}  IN  SOA  {}. {}. (\n'.format(
@@ -116,24 +112,34 @@ class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
             '\t\t{}     ; Retry\n'.format(self.retry) +
             '\t\t{}     ; Expire\n'.format(self.expire) +
             '\t\t{}     ; Minimum\n'.format(self.minimum) +
-            ')\n\n'
+            ')\n'  # blank line after
         ]
+
+        is_reverse = self.root_domain.is_reverse)
 
         for d in self.domain_set.all():
             records = chain(
+                d.nameserver_set.filter(views=view),
                 d.addressrecord_set.filter(views=view),
                 d.cname_set.filter(views=view),
                 d.mx_set.filter(views=view),
                 d.srv_set.filter(views=view),
                 d.sshfp_set.filter(views=view),
-                d.staticinterface_set.filter(views=view),
                 d.txt_set.filter(views=view),
                 d.reverse_ptr_set.filter(views=view),
             )
             for rec in records:
-                ss.append(rec.dns_build() + '\n')
+                ss.append(rec.dns_build())
 
-        return ''.join(ss)
+            reversible_records = chain(
+                d.range_set.filter(views=view),
+                d.staticinterface_set.filter(views=view),
+            )
+
+            for rec in reversible_records:
+                ss.append(rec.dns_build(reverse=is_reverse))
+
+        return '\n'.join(ss)
 
     def __unicode__(self):
         return self.root_domain.name

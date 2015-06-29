@@ -393,13 +393,13 @@ class Range(BaseModel, ViewMixin, ObjectUrlMixin):
         else:
             return None
 
-    def bind_render_record(self, **kwargs):
+    def dns_build(self, reverse):
+        from cyder.cydns.utils import render_dns_record
+
         if self.range_type == STATIC or self.ip_type == IP_TYPE_6:
             return ""
 
-        DEFAULT_TTL = 3600
-        reverse = kwargs.pop('reverse', False)
-        built = ""
+        ss = []
         start = map(int, self.start_str.split("."))
         end = map(int, self.end_str.split("."))
         for a in range(start[0], end[0] + 1):
@@ -411,20 +411,26 @@ class Range(BaseModel, ViewMixin, ObjectUrlMixin):
                 for c in range(c1, c2 + 1):
                     d1 = start[3] if (a, b, c) == tuple(start[:3]) else 0
                     d2 = end[3] if (a, b, c) == tuple(end[:3]) else 255
-                    host = "{0}-{1}-{2}-$.{3}.".format(a, b, c, self.domain)
+
+                    name = '$GENERATE {}-{} {}-{}-{}-$.{}.'.format(
+                        d1, d2, a, b, c, self.domain)
+
                     if reverse:
                         ip = "$.{2}.{1}.{0}.in-addr.arpa.".format(a, b, c)
-                        template = ("$GENERATE {3:>3}-{4:<3}  {1:44} {2}  "
-                                    "IN  PTR     {0}")
+                        type_ = 'PTR'
                     else:
                         ip = "{0}.{1}.{2}.$".format(a, b, c)
-                        template = ("$GENERATE {3:>3}-{4:<3}  {0:44} {2}  "
-                                    "IN  A       {1}")
+                        type_ = 'A'
 
-                    rec = template.format(host, ip, DEFAULT_TTL, d1, d2)
-                    built = "\n".join([built, rec]).strip()
+                    ss.append(render_dns_record(self, {
+                        'name': ('', name),
+                        'ttl': ('', '3600'),
+                        'class': ('', 'IN'),
+                        'type': ('', type_),
+                        'rdata': ('', ip),
+                    }))
 
-        return built
+        return '\n'.join(ss)
 
 
 def find_free_ip(start, end, ip_type='4'):

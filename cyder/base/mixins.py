@@ -11,26 +11,9 @@ from cyder.base.utils import filter_by_ctnr
 
 class DisplayMixin(object):
     def dns_build(self):
-        widths = {
-            'name': 64,
-            'ttl': 6,
-            'class': 4,
-            'type': 5,
-            'priority': 2,
-            'weight': 2,
-            'port': 8,
-            'algorithm': 3,
-            'fp_type': 3,
-            'rdata': 0,
-        }
+        from cyder.cydns.utils import render_dns_record
 
-        ss = ['']
-        for x in ('name', 'ttl', 'class', 'type', 'priority', 'weight', 'port',
-                'algorithm', 'fp_type', 'rdata'):
-            field, suffix = self.dns_build_info.get(x, (None, ''))
-            ss.append(str(getattr(self, field) if field else '') + suffix)
-            ss.append(' ' * max(0, widths[x] - len(ss[-1])))
-        return ''.join(ss)
+        return render_dns_record(self, self.dns_build_info)
 
 
 class ObjectUrlMixin(object):
