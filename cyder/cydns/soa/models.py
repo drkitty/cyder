@@ -1,5 +1,4 @@
 import time
-from gettext import gettext as _
 from itertools import chain
 from string import Template
 
@@ -90,9 +89,6 @@ class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
 
     search_fields = ('primary', 'contact', 'description', 'root_domain__name')
     sort_fields = ('root_domain__name',)
-    template = _("{root_domain}. {ttl} {rdclass:$rdclass_just} "
-                 "{rdtype:$rdtype_just}" "{primary}. {contact}. ({serial} "
-                 "{refresh} {retry} {expire})")
 
     attrs = None
 

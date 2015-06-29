@@ -24,14 +24,6 @@ class TXT(LabelDomainMixin, CydnsRecord):
 
     search_fields = ("fqdn", "txt_data")
 
-    dns_build_info = {
-        'name': ('fqdn', '.'),
-        'ttl': ('ttl', ''),
-        'class': (None, 'IN'),
-        'type': (None, 'A'),
-        'rdata': ('fixme', ''),
-    }
-
     class Meta:
         app_label = 'cyder'
         db_table = 'txt'
@@ -67,10 +59,6 @@ class TXT(LabelDomainMixin, CydnsRecord):
     def escaped_txt_data(self):
         return self.txt_data.replace('\\', '\\\\').replace('"', '\\"')
 
-    @property
-    def rdtype(self):
-        return 'TXT'
-
     def bind_render_record(self, pk=False):
         TXT_LINE_LENGTH = 120
 
@@ -100,6 +88,17 @@ class TXT(LabelDomainMixin, CydnsRecord):
         return template.format(
             bind_name=bind_name, ttl=self.ttl, rdtype=self.rdtype,
             rdclass='IN', txt_data=txt_data
+        )
+
+    def dns_build(self):
+        from cyder.cydns.utils import render_dns_record
+
+        return render_dns_record(
+            name=self.fqdn + '.',
+            ttl=self.ttl,
+            cls='IN',
+            type='TXT',
+            rdata=FIXME,  # FIXME
         )
 
     @transaction_atomic

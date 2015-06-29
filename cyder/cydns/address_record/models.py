@@ -173,14 +173,6 @@ class AddressRecord(BaseAddressRecord):
     ctnr = models.ForeignKey("cyder.Ctnr", null=False,
                              verbose_name="Container")
 
-    dns_build_info = {
-        'name': ('fqdn', '.'),
-        'ttl': ('ttl', ''),
-        'class': (None, 'IN'),
-        'type': (None, 'A'),
-        'rdata': ('ip_str', ''),
-    }
-
     class Meta:
         app_label = 'cyder'
         db_table = "address_record"
@@ -196,6 +188,17 @@ class AddressRecord(BaseAddressRecord):
             ('IP', 'ip_lower', str(self.ip_str)),
         ]
         return data
+
+    def dns_build(self):
+        from cyder.cydns.utils import render_dns_record
+
+        return render_dns_record(
+            name=self.fqdn + '.',
+            ttl=self.ttl,
+            cls='IN',
+            type=('A' if self.ip_type == '4' else 'AAAA'),
+            rdata=self.ip_str,
+        )
 
     def cyder_unique_error_message(self, model_class, unique_check):
         if unique_check == ('label', 'domain', 'fqdn', 'ip_upper', 'ip_lower',

@@ -161,14 +161,6 @@ class PTR(BaseModel, BasePTR, Ip, ViewMixin, DisplayMixin, ObjectUrlMixin):
 
     search_fields = ('ip_str', 'fqdn')
 
-    dns_build_info = {
-        'name': ('name', '.'),
-        'ttl': ('ttl', ''),
-        'class': (None, 'IN'),
-        'type': (None, 'PTR'),
-        'rdata': ('fqdn', ''),
-    }
-
     class Meta:
         app_label = 'cyder'
         db_table = 'ptr'
@@ -176,15 +168,6 @@ class PTR(BaseModel, BasePTR, Ip, ViewMixin, DisplayMixin, ObjectUrlMixin):
 
     def __unicode__(self):
         return u'{} PTR {}'.format(self.ip_str, self.fqdn)
-
-    @property
-    def name(self):
-        if self.ip_type == '6':
-            ip = "%x" % ((self.ip_upper << 64) | self.ip_lower)
-            return '.'.join(reversed(ip)) + ".ip6.arpa."
-        else:
-            return ('.'.join(reversed(self.ip_str.split('.'))) +
-                              '.in-addr.arpa.')
 
     @staticmethod
     def filter_by_ctnr(ctnr, objects=None):
@@ -195,13 +178,27 @@ class PTR(BaseModel, BasePTR, Ip, ViewMixin, DisplayMixin, ObjectUrlMixin):
         return objects
 
     @property
-    def rdtype(self):
-        return 'PTR'
-
-    @property
     def range(self):
         rng = find_range(self.ip_str)
         return rng
+
+    def dns_build(self):
+        from cyder.cydns.utils import render_dns_record
+
+        if self.ip_type == '6':
+            ip = "%x" % ((self.ip_upper << 64) | self.ip_lower)
+            name ='.'.join(reversed(ip)) + ".ip6.arpa."
+        else:
+            name = ('.'.join(reversed(self.ip_str.split('.'))) +
+                              '.in-addr.arpa.')
+
+        return render_dns_record(
+            name=name,
+            ttl=self.ttl,
+            cls='IN',
+            type='PTR',
+            rdata='fqdn',
+        )
 
     @transaction_atomic
     def save(self, *args, **kwargs):

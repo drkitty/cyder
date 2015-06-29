@@ -36,16 +36,6 @@ class SSHFP(LabelDomainMixin, CydnsRecord):
 
     search_fields = ("fqdn", "key")
 
-    dns_build_info = {
-        'name': ('fqdn', '.'),
-        'ttl': ('ttl', ''),
-        'class': (None, 'IN'),
-        'type': (None, 'SSHFP'),
-        'algorithm': ('algorithm_number', ''),
-        'fp_type': ('fingerprint_type', ''),
-        'rdata': ('key', ''),
-    }
-
     class Meta:
         app_label = 'cyder'
         db_table = 'sshfp'
@@ -84,9 +74,19 @@ class SSHFP(LabelDomainMixin, CydnsRecord):
             {'name': 'key', 'datatype': 'string', 'editable': True},
         ]}
 
-    @property
-    def rdtype(self):
-        return 'SSHFP'
+    def dns_build(self):
+        from cyder.cydns.utils import render_dns_record
+
+        return render_dns_record(
+            name=self.fqdn + '.',
+            ttl=self.ttl,
+            cls='IN',
+            type='SSHFP',
+            algorithm=self.algorithm_number,
+            fp_type=self.fingerprint_type,
+            rdata=self.key,
+        )
+
 
     @transaction_atomic
     def save(self, *args, **kwargs):

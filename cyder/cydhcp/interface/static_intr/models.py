@@ -121,22 +121,21 @@ class StaticInterface(BaseAddressRecord, BasePTR, ExpirableMixin):
         from cyder.cydns.utils import render_dns_record
 
         if reverse:
-            return render_dns_record(self, {
-                'name': ('', ip_to_reverse_name(self.ip_str) + '.'),
-                'ttl': ('ttl', ''),
-                'class': (None, 'IN'),
-                'type': (None, 'PTR'),
-                'rdata': ('fqdn', ''),
-            })
+            name = ip_to_reverse_name(self.ip_str) + '.'
+            type_ = 'PTR'
+            rdata = self.fqdn
         else:
-            return render_dns_record(self, {
-                'name': ('fqdn', '.'),
-                'ttl': ('ttl', ''),
-                'class': (None, 'IN'),
-                'type': (None, 'A'),
-                'rdata': ('ip_str', ''),
-            })
+            name = self.fqdn + '.'
+            type_ = 'A'
+            rdata = self.ip_str
 
+        return render_dns_record(
+            name=name,
+            ttl=self.ttl,
+            cls='IN',
+            type=type_,
+            rdata=rdata,
+        )
 
     def get_related_systems(self):
         related_interfaces = StaticInterface.objects.filter(mac=self.mac)

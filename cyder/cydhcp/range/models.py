@@ -416,19 +416,19 @@ class Range(BaseModel, ViewMixin, ObjectUrlMixin):
                         d1, d2, a, b, c, self.domain)
 
                     if reverse:
-                        ip = "$.{2}.{1}.{0}.in-addr.arpa.".format(a, b, c)
+                        rdata = "$.{2}.{1}.{0}.in-addr.arpa.".format(a, b, c)
                         type_ = 'PTR'
                     else:
-                        ip = "{0}.{1}.{2}.$".format(a, b, c)
+                        rdata = "{0}.{1}.{2}.$".format(a, b, c)
                         type_ = 'A'
 
-                    ss.append(render_dns_record(self, {
-                        'name': ('', name),
-                        'ttl': ('', '3600'),
-                        'class': ('', 'IN'),
-                        'type': ('', type_),
-                        'rdata': ('', ip),
-                    }))
+                    ss.append(render_dns_record(
+                        name=name,
+                        ttl=3600,
+                        cls='IN',
+                        type=type_,
+                        rdata=rdata,
+                    ))
 
         return '\n'.join(ss)
 

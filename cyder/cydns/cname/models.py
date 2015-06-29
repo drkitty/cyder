@@ -31,14 +31,6 @@ class CNAME(LabelDomainMixin, CydnsRecord):
     search_fields = ('fqdn', 'target')
     sort_fields = ('fqdn', 'target')
 
-    dns_build_info = {
-        'name': ('fqdn', '.'),
-        'ttl': ('ttl', ''),
-        'class': (None, 'IN'),
-        'type': (None, 'CNAME'),
-        'rdata': ('target', ''),
-    }
-
     class Meta:
         app_label = 'cyder'
         db_table = 'cname'
@@ -66,9 +58,16 @@ class CNAME(LabelDomainMixin, CydnsRecord):
             {'name': 'target', 'datatype': 'string', 'editable': True},
         ]}
 
-    @property
-    def rdtype(self):
-        return 'CNAME'
+    def dns_build(self):
+        from cyder.cydns.utils import render_dns_record
+
+        return render_dns_record(
+            name=self.fqdn + '.',
+            ttl=self.ttl,
+            cls='IN',
+            type='CNAME',
+            rdata=self.target,
+        )
 
     @transaction_atomic
     def save(self, *args, **kwargs):

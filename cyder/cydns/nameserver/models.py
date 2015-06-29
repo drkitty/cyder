@@ -49,14 +49,6 @@ class Nameserver(CydnsRecord):
 
     search_fields = ("server", "domain__name")
 
-    dns_build_info = {
-        'name': ('name', '.'),
-        'ttl': ('ttl', ''),
-        'class': (None, 'IN'),
-        'type': (None, 'NS'),
-        'rdata': ('server', ''),
-    }
-
     class Meta:
         app_label = 'cyder'
         db_table = "nameserver"
@@ -64,10 +56,6 @@ class Nameserver(CydnsRecord):
 
     def __unicode__(self):
         return u'{} NS {}'.format(self.domain.name, self.server)
-
-    @property
-    def name(self):
-        return self.domain.name
 
     @staticmethod
     def filter_by_ctnr(ctnr, objects=None):
@@ -96,6 +84,18 @@ class Nameserver(CydnsRecord):
             {'name': 'server', 'datatype': 'string', 'editable': True},
             {'name': 'glue', 'datatype': 'string', 'editable': True},
         ]}
+
+    def dns_build(self):
+        from cyder.cydns.utils import render_dns_record
+
+        return render_dns_record(
+            name=self.domain.name + '.',
+            ttl=self.ttl,
+            cls='IN',
+            type='NS',
+            rdata=self.server,
+        )
+
 
     # TODO, make this a property
     def get_glue(self):

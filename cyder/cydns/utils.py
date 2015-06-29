@@ -209,11 +209,11 @@ def get_zones():
                                  soa__isnull=False)
 
 
-def render_dns_record(obj, info):
+def render_dns_record(**info):
     widths = {
         'name': 64,
         'ttl': 6,
-        'class': 4,
+        'cls': 4,
         'type': 5,
         'priority': 2,
         'weight': 2,
@@ -224,9 +224,9 @@ def render_dns_record(obj, info):
     }
 
     ss = ['']
-    for x in ('name', 'ttl', 'class', 'type', 'priority', 'weight', 'port',
+    for x in ('name', 'ttl', 'cls', 'type', 'priority', 'weight', 'port',
             'algorithm', 'fp_type', 'rdata'):
-        field, suffix = info.get(x, (None, ''))
-        ss.append(str(getattr(obj, field) if field else '') + suffix)
-        ss.append(' ' * max(0, widths[x] - len(ss[-1])))
+        field = str(info.get(x, ''))
+        ss.append(field)
+        ss.append(' ' * max(0, widths[x] - len(field)))
     return ''.join(ss)

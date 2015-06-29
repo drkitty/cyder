@@ -40,17 +40,6 @@ class SRV(CydnsRecord, LabelDomainUtilsMixin):
 
     search_fields = ("fqdn", "target")
 
-    dns_build_info = {
-        'name': ('fqdn', '.'),
-        'ttl': ('ttl', ''),
-        'class': (None, 'IN'),
-        'type': (None, 'SRV'),
-        'priority': ('priority', ''),
-        'weight': ('weight', ''),
-        'port': ('port', ''),
-        'rdata': ('target', ''),
-    }
-
     def details(self):
         """For tables."""
         data = super(SRV, self).details()
@@ -83,6 +72,20 @@ class SRV(CydnsRecord, LabelDomainUtilsMixin):
         app_label = 'cyder'
         db_table = 'srv'
         unique_together = ("label", "domain", "target", "port")
+
+    def dns_build(self):
+        from cyder.cydns.utils import render_dns_record
+
+        return render_dns_record(
+            name=self.fqdn + '.',
+            ttl=self.ttl,
+            cls='IN',
+            type='SRV',
+            priority=self.priority,
+            weight=self.weight,
+            port=self.port,
+            rdata=self.target,
+        )
 
     @transaction_atomic
     def save(self, *args, **kwargs):

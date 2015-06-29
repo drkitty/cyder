@@ -23,15 +23,6 @@ class MX(LabelDomainMixin, CydnsRecord):
                              verbose_name="Container")
     search_fields = ('fqdn', 'server')
 
-    dns_build_info = {
-        'name': ('fqdn', '.'),
-        'ttl': ('ttl', ''),
-        'class': (None, 'IN'),
-        'type': (None, 'MX'),
-        'priority': ('priority', ''),
-        'rdata': ('server', ''),
-    }
-
     class Meta:
         app_label = 'cyder'
         db_table = 'mx'
@@ -62,6 +53,18 @@ class MX(LabelDomainMixin, CydnsRecord):
             {'name': 'priority', 'datatype': 'integer', 'editable': True},
             {'name': 'ttl', 'datatype': 'integer', 'editable': True},
         ]}
+
+    def dns_build(self):
+        from cyder.cydns.utils import render_dns_record
+
+        return render_dns_record(
+            name=self.fqdn + '.',
+            ttl=self.ttl,
+            cls='IN',
+            type='MX',
+            priority=self.priority,
+            rdata=self.server,
+        )
 
     @transaction_atomic
     def save(self, *args, **kwargs):
