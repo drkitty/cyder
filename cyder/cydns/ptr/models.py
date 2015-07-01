@@ -197,7 +197,7 @@ class PTR(BaseModel, BasePTR, Ip, ViewMixin, DisplayMixin, ObjectUrlMixin):
             ttl=self.ttl,
             cls='IN',
             type='PTR',
-            rdata='fqdn',
+            rdata=self.fqdn,
         )
 
     @transaction_atomic
