@@ -157,8 +157,7 @@ class CydnsRecord(BaseModel, ViewMixin, DisplayMixin, ObjectUrlMixin):
         if not (hasattr(self, "is_glue") and self.is_glue is True and
                 self.pk is None):
             self.check_for_delegation()
-        if self.rdtype != 'CNAME':
-            self.check_for_cname()
+        self.check_for_cname()
 
     def delete(self, *args, **kwargs):
         self.schedule_zone_rebuild()

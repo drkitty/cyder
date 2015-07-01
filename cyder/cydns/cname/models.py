@@ -83,6 +83,10 @@ class CNAME(LabelDomainMixin, CydnsRecord):
         self.check_SOA_condition()
         self.existing_node_check()
 
+    def check_for_cname(self):
+        # This *is* a CNAME.
+        pass
+
     def check_roundrobin_condition(self):
         """
         Allow CNAMEs with the same name iff they share the same container.
