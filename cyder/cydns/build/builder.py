@@ -24,6 +24,7 @@ class DNSBuilder(object):
         for s in SOA.objects.filter(dns_enabled=True):
             d = path.join(
                 STEM,
+                'reverse' if s.is_reverse else '',
                 '/'.join(list(reversed(s.root_domain.name.split('.')))))
 
             try:
@@ -32,10 +33,10 @@ class DNSBuilder(object):
                 if e.errno != errno.EEXIST:
                     raise
 
-            name_base = path.join(d, s.root_domain.name + '.')
+            name_base = d + s.root_domain.name
 
             for v in views:
-                name = name_base + v.name
+                name = name_base + '.' + v.name
                 print name
                 with open(name, 'wb') as f:
                     f.write(s.dns_build(view=v))

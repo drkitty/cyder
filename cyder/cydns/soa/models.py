@@ -99,6 +99,10 @@ class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
         # being assigned to multiple zones. See the documentation in the
         # Domain models.py file for more info.
 
+    @property
+    def is_reverse(self):
+        return self.root_domain.is_reverse
+
     def dns_build(self, view):
         ss = [
             '{}.  {}  IN  SOA  {}. {}. (\n'.format(
@@ -110,8 +114,6 @@ class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
             '\t\t{}     ; Minimum\n'.format(self.minimum) +
             ')\n'  # blank line after
         ]
-
-        is_reverse = self.root_domain.is_reverse
 
         for d in self.domain_set.all():
             records = chain(
@@ -127,7 +129,7 @@ class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
             for rec in records:
                 ss.append(rec.dns_build())
 
-            if is_reverse:
+            if self.is_reverse:
                 reversible_records = chain(
                     d.range_set.filter(views=view),
                     d.reverse_staticintr_set.filter(views=view),
@@ -139,7 +141,7 @@ class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
                 )
 
             for rec in reversible_records:
-                ss.append(rec.dns_build(reverse=is_reverse))
+                ss.append(rec.dns_build(reverse=self.is_reverse))
 
         return '\n'.join(ss)
 
