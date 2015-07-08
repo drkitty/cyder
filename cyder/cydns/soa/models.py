@@ -61,7 +61,7 @@ class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
     primary = models.CharField(max_length=100, validators=[validate_fqdn])
     contact = models.CharField(max_length=100, validators=[validate_fqdn])
     serial = models.PositiveIntegerField(
-        null=False, default=int(time.time()),
+        null=False, default=(lambda: int(time.time())),
         validators=[validate_positive_integer_field])
     # Indicates when the zone data is no longer authoritative. Used by slave.
     expire = models.PositiveIntegerField(
