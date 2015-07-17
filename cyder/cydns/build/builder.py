@@ -25,7 +25,7 @@ class DNSBuilder(object):
             d = path.join(
                 STEM,
                 'reverse' if s.is_reverse else '',
-                '/'.join(list(reversed(s.root_domain.name.split('.')))))
+                '/'.join(list(reversed(s.root_domain.name.split('.'))))) + '/'
 
             try:
                 os.makedirs(d)
