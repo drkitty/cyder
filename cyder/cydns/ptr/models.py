@@ -218,6 +218,8 @@ class PTR(BaseModel, BasePTR, Ip, ViewMixin, DisplayMixin, ObjectUrlMixin):
             if old_range:
                 old_range.save(commit=False)
 
+        self.domain.soa.save(commit=False)
+
     @transaction_atomic
     def delete(self, *args, **kwargs):
         update_range_usage = kwargs.pop('update_range_usage', True)

@@ -3,7 +3,6 @@ from cyder.base.eav.models import *
 from cyder.core.ctnr.models import *
 from cyder.core.cyuser.models import *
 from cyder.core.system.models import *
-from cyder.core.task.models import *
 from cyder.cydhcp.interface.dynamic_intr.models import *
 from cyder.cydhcp.interface.static_intr.models import *
 from cyder.cydhcp.network.models import *
@@ -14,6 +13,7 @@ from cyder.cydhcp.vlan.models import *
 from cyder.cydhcp.vrf.models import *
 from cyder.cydhcp.workgroup.models import *
 from cyder.cydns.address_record.models import *
+from cyder.cydns.build.models import *
 from cyder.cydns.cname.models import *
 from cyder.cydns.cybind.models import *
 from cyder.cydns.domain.models import *

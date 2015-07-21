@@ -82,9 +82,6 @@ class Domain(BaseModel, ObjectUrlMixin):
                             blank=True, verbose_name='SOA',
                             on_delete=models.SET_NULL)
     is_reverse = models.BooleanField(default=False)
-    # This indicates if this domain (and zone) needs to be rebuilt
-    dirty = models.BooleanField(default=False)
-    # Read about the label and domain paradigm
     purgeable = models.BooleanField(default=False)
     delegated = models.BooleanField(default=False, null=False, blank=True)
 
@@ -166,6 +163,8 @@ class Domain(BaseModel, ObjectUrlMixin):
         for child in bad_children:
             child.soa = self.soa
             child.save(commit=False)  # Recurse.
+
+        self.domain.soa.save(commit=False)
 
     @property
     def ip_type(self):

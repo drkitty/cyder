@@ -160,8 +160,6 @@ class CydnsRecord(BaseModel, ViewMixin, DisplayMixin, ObjectUrlMixin):
         self.check_for_cname()
 
     def delete(self, *args, **kwargs):
-        self.schedule_zone_rebuild()
-
         from cyder.cydns.utils import prune_tree
         call_prune_tree = kwargs.pop('call_prune_tree', True)
         objs_domain = self.domain
@@ -170,6 +168,8 @@ class CydnsRecord(BaseModel, ViewMixin, DisplayMixin, ObjectUrlMixin):
 
         if call_prune_tree:
             prune_tree(objs_domain)
+
+        self.domain.soa.save(commit=False)
 
     def save(self, *args, **kwargs):
         if self.pk:
@@ -191,9 +191,7 @@ class CydnsRecord(BaseModel, ViewMixin, DisplayMixin, ObjectUrlMixin):
             from cyder.cydns.utils import prune_tree
             prune_tree(db_domain)
 
-    def schedule_zone_rebuild(self):
-        if self.domain.soa:
-            self.domain.soa.schedule_rebuild()
+        self.domain.soa.save(commit=False)
 
     def check_domain_ctnr(self):
         """

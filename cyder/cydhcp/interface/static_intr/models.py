@@ -155,7 +155,6 @@ class StaticInterface(BaseAddressRecord, BasePTR, ExpirableMixin):
             old_range = StaticInterface.objects.get(id=self.id).range
 
         super(StaticInterface, self).save(*args, **kwargs)
-        self.schedule_zone_rebuild()
         if update_range_usage:
             new_range = self.range
             if new_range:
@@ -178,12 +177,6 @@ class StaticInterface(BaseAddressRecord, BasePTR, ExpirableMixin):
         super(StaticInterface, self).delete(*args, **kwargs)
         if rng and update_range_usage:
             rng.save(commit=False)
-
-    def schedule_zone_rebuild(self):
-        if self.domain.soa is not None:
-            self.domain.soa.schedule_rebuild()
-        if self.reverse_domain.soa is not None:
-            self.reverse_domain.soa.schedule_rebuild()
 
     def check_A_PTR_collision(self):
         if PTR.objects.filter(ip_str=self.ip_str).exists():

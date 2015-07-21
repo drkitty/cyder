@@ -61,8 +61,7 @@ class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
     primary = models.CharField(max_length=100, validators=[validate_fqdn])
     contact = models.CharField(max_length=100, validators=[validate_fqdn])
     serial = models.PositiveIntegerField(
-        null=False, default=(lambda: int(time.time())),
-        validators=[validate_positive_integer_field])
+        null=False, default=1, validators=[validate_positive_integer_field])
     # Indicates when the zone data is no longer authoritative. Used by slave.
     expire = models.PositiveIntegerField(
         null=False, default=DEFAULT_EXPIRE,
@@ -83,7 +82,8 @@ class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
     root_domain = models.ForeignKey("cyder.Domain", null=False, unique=True,
                                     related_name="root_of_soa")
     # This indicates if this SOA's zone needs to be rebuilt
-    dirty = models.BooleanField(default=False)
+    dirty = models.BooleanField(default=True)
+
     is_signed = models.BooleanField(default=False)
     dns_enabled = models.BooleanField(default=True)
 
@@ -103,11 +103,11 @@ class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
     def is_reverse(self):
         return self.root_domain.is_reverse
 
-    def dns_build(self, view):
+    def dns_build(self, view, serial):
         ss = [
             '{}.  {}  IN  SOA  {}. {}. (\n'.format(
                 self.root_domain.name, self.ttl, self.primary, self.contact) +
-            '\t\t{}     ; Serial\n'.format(self.serial) +
+            '\t\t{}     ; Serial\n'.format(serial) +
             '\t\t{}     ; Refresh\n'.format(self.refresh) +
             '\t\t{}     ; Retry\n'.format(self.retry) +
             '\t\t{}     ; Expire\n'.format(self.expire) +
@@ -205,44 +205,22 @@ class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
                 return True
         return False
 
-    def schedule_rebuild(self, save=True, force=False):
-        if MIGRATING and not force:
-            return
-
-        Task.schedule_zone_rebuild(self)
-        self.dirty = True
-        if save:
-            self.save()
-
     @transaction_atomic
     def save(self, *args, **kwargs):
+        self.dirty = True
+
         self.full_clean()
 
         is_new = self.pk is None
-
-        if is_new:
-            self.dirty = True
-        else:
-            db_self = SOA.objects.get(pk=self.pk)
-            if not self.dirty:
-                fields = [
-                    'primary', 'contact', 'expire', 'retry', 'refresh',
-                    'root_domain',
-                ]
-                # Leave out serial and dirty so rebuilds don't cause a
-                # never-ending build cycle.
-                for field in fields:
-                    if getattr(db_self, field) != getattr(self, field):
-                        self.schedule_rebuild(save=False)
 
         super(SOA, self).save(*args, **kwargs)
 
         if is_new:
             # Need to call this after save because new objects won't have a pk.
-            self.schedule_rebuild(save=False)
             self.root_domain.save(commit=False)
             reassign_reverse_records(None, self.root_domain)
         else:
+            db_self = self.reload()
             if db_self.root_domain != self.root_domain:
                 from cyder.cydns.domain.models import Domain
 

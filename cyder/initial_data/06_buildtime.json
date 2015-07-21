@@ -1,0 +1,9 @@
+[
+ {
+  "pk": 1,
+  "model": "cyder.buildtime",
+  "fields": {
+   "start": "1980-01-01T00:00:00"
+  }
+ }
+]
