@@ -63,7 +63,7 @@ class MX(LabelDomainMixin, CydnsRecord):
             cls='IN',
             type='MX',
             priority=self.priority,
-            rdata=self.server,
+            rdata=self.server + '.',
         )
 
     @transaction_atomic

@@ -84,7 +84,7 @@ class SSHFP(LabelDomainMixin, CydnsRecord):
             type='SSHFP',
             algorithm=self.algorithm_number,
             fp_type=self.fingerprint_type,
-            rdata=self.key,
+            rdata=self.key + '.',
         )
 
 

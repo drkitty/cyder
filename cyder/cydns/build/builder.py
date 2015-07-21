@@ -5,6 +5,7 @@ import errno
 import os
 from collections import namedtuple
 from datetime import datetime
+from itertools import islice
 from os import path
 from time import mktime
 
@@ -17,6 +18,15 @@ from cyder.cydns.view.models import View
 
 
 STEM = 'gen2/dns/stage'
+
+
+CONFIG_ZONE = """\
+zone "{zone_name}" IN {{
+    type master;
+    file "{f_name}";
+}};
+
+"""
 
 
 def get_serial(filename):
@@ -49,25 +59,60 @@ class DNSBuilder(object):
         cache = {}
         views = View.objects.all()
 
+        config = {}
+
+        config_dir = path.join(STEM, 'config')
+        try:
+            os.makedirs(config_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+        rev_dir = path.join(STEM, 'reverse')
+        try:
+            os.makedirs(rev_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+        for v in views:
+            config[v.pk] = open(
+                path.join(config_dir, 'master.' + v.name), 'w')
+
         for s in SOA.objects.filter(dns_enabled=True):
-            d = path.join(
-                STEM,
-                'reverse' if s.is_reverse else '',
-                '/'.join(list(reversed(s.root_domain.name.split('.'))))) + '/'
+            if s.is_reverse:
+                suffix = list(islice(
+                    reversed(s.root_domain.name.split('.')),
+                    0, 2))
+                suffix = '.'.join(reversed(suffix))
+
+                f_dir = path.join(
+                    rev_dir,
+                    suffix
+                )
+            else:
+                f_dir = path.join(
+                    STEM,
+                    '/'.join(list(reversed(s.root_domain.name.split('.'))))
+                )
 
             try:
-                os.makedirs(d)
+                os.makedirs(f_dir)
             except OSError as e:
                 if e.errno != errno.EEXIST:
                     raise
 
-            name_base = d + s.root_domain.name
+            f_name_base = path.join(f_dir, s.root_domain.name)
 
             new_serial = -1
 
             for v in views:
-                name = name_base + '.' + v.name
-                file_serial = get_serial(name)
+                f_name = f_name_base + '.' + v.name
+
+                config[v.pk].write(CONFIG_ZONE.format(
+                    zone_name=s.root_domain.name, f_name=f_name))
+
+                file_serial = get_serial(f_name)
                 if s.dirty or file_serial != s.serial or force:
                     new_serial = max(
                         new_serial - 1, s.serial, time_serial - 1,
@@ -75,9 +120,9 @@ class DNSBuilder(object):
 
             if new_serial > -1:
                 for v in views:
-                    name = name_base + '.' + v.name
-                    print name
-                    with open(name, 'wb') as f:
+                    f_name = f_name_base + '.' + v.name
+                    print f_name
+                    with open(f_name, 'wb') as f:
                         f.write(s.dns_build(view=v, serial=new_serial))
 
                 cache[s.pk] = CachedSOA(
@@ -87,3 +132,6 @@ class DNSBuilder(object):
         for pk, c in cache.iteritems():
             SOA.objects.filter(pk=pk, modified=c.modified).update(
                 dirty=False, serial=c.new_serial)
+
+        for f in config.itervalues():
+            f.close()

@@ -123,7 +123,7 @@ class StaticInterface(BaseAddressRecord, BasePTR, ExpirableMixin):
         if reverse:
             name = ip_to_reverse_name(self.ip_str) + '.'
             type_ = 'PTR'
-            rdata = self.fqdn
+            rdata = self.fqdn + '.'
         else:
             name = self.fqdn + '.'
             type_ = 'A'

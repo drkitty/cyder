@@ -93,7 +93,7 @@ class Nameserver(CydnsRecord):
             ttl=self.ttl,
             cls='IN',
             type='NS',
-            rdata=self.server,
+            rdata=self.server + '.',
         )
 
 

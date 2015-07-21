@@ -84,7 +84,7 @@ class SRV(CydnsRecord, LabelDomainUtilsMixin):
             priority=self.priority,
             weight=self.weight,
             port=self.port,
-            rdata=self.target,
+            rdata=self.target + '.',
         )
 
     @transaction_atomic

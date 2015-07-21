@@ -4,7 +4,7 @@ from django.db.models import get_model
 
 from cyder.base.models import BaseModel
 from cyder.cydns.domain.models import Domain
-from cyder.base.mixins import ObjectUrlMixin, DisplayMixin
+from cyder.base.mixins import ObjectUrlMixin
 from cyder.cydns.view.models import View
 from cyder.cydns.validation import validate_first_label, validate_fqdn
 from cyder.cydns.validation import validate_ttl
@@ -118,7 +118,7 @@ class ViewMixin(models.Model):
                 check_no_ns_soa_condition(self.reverse_domain, view=view)
 
 
-class CydnsRecord(BaseModel, ViewMixin, DisplayMixin, ObjectUrlMixin):
+class CydnsRecord(BaseModel, ViewMixin, ObjectUrlMixin):
     ttl = models.PositiveIntegerField(default=3600, blank=True, null=True,
                                       validators=[validate_ttl],
                                       verbose_name="Time to live")

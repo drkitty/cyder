@@ -66,7 +66,7 @@ class CNAME(LabelDomainMixin, CydnsRecord):
             ttl=self.ttl,
             cls='IN',
             type='CNAME',
-            rdata=self.target,
+            rdata=self.target + '.',
         )
 
     @transaction_atomic

@@ -7,7 +7,7 @@ from ipaddr import AddressValueError, IPv4Address, IPv6Address
 
 from cyder.base.utils import transaction_atomic
 from cyder.base.models import BaseModel
-from cyder.base.mixins import DisplayMixin, ObjectUrlMixin
+from cyder.base.mixins import ObjectUrlMixin
 from cyder.cydhcp.range.utils import find_range
 from cyder.cydns.models import ViewMixin
 from cyder.cydns.domain.models import Domain, name_to_domain
@@ -137,7 +137,7 @@ class BasePTR(object):
             )
 
 
-class PTR(BaseModel, BasePTR, Ip, ViewMixin, DisplayMixin, ObjectUrlMixin):
+class PTR(BaseModel, BasePTR, Ip, ViewMixin, ObjectUrlMixin):
     """
     A PTR is used to map an IP to a domain name.
 
@@ -197,7 +197,7 @@ class PTR(BaseModel, BasePTR, Ip, ViewMixin, DisplayMixin, ObjectUrlMixin):
             ttl=self.ttl,
             cls='IN',
             type='PTR',
-            rdata=self.fqdn,
+            rdata=self.fqdn + '.',
         )
 
     @transaction_atomic

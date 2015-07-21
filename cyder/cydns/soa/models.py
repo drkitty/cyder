@@ -9,7 +9,7 @@ from django.db import models, transaction
 from cyder.base.eav.constants import ATTRIBUTE_INVENTORY
 from cyder.base.eav.fields import EAVAttributeField
 from cyder.base.eav.models import Attribute, EAVBase
-from cyder.base.mixins import ObjectUrlMixin, DisplayMixin
+from cyder.base.mixins import ObjectUrlMixin
 from cyder.base.models import BaseModel
 from cyder.base.validators import validate_positive_integer_field
 from cyder.base.utils import transaction_atomic
@@ -26,7 +26,7 @@ DEFAULT_REFRESH = 180  # 3 min
 DEFAULT_MINIMUM = 180  # 3 min
 
 
-class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
+class SOA(BaseModel, ObjectUrlMixin):
     """
     SOA stands for Start of Authority
 
@@ -46,10 +46,6 @@ class SOA(BaseModel, ObjectUrlMixin, DisplayMixin):
 
         >>> SOA(primary=primary, contact=contact, retry=retry,
         ... refresh=refresh, description=description)
-
-    Each DNS zone must have its own SOA object. Use the description field to
-    remind yourself which zone an SOA corresponds to if different SOAs have a
-    similar ``primary`` and ``contact`` value.
     """
 
     pretty_type = 'SOA'

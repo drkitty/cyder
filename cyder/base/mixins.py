@@ -9,13 +9,6 @@ from django.forms import ModelChoiceField, HiddenInput
 from cyder.base.utils import filter_by_ctnr
 
 
-class DisplayMixin(object):
-    def dns_build(self):
-        from cyder.cydns.utils import render_dns_record
-
-        return render_dns_record(self, self.dns_build_info)
-
-
 class ObjectUrlMixin(object):
     """
     This is a mixin that adds important url methods to a model. This
