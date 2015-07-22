@@ -497,7 +497,7 @@ REST_FRAMEWORK = {
 # ==================
 
 
-BINDBUILD = {
+DNSBUILD = {
     # stage_dir: Where test builds should go. This shouldn't be under
     # version control.
     'stage_dir': '/tmp/dns_stage/',

@@ -17,9 +17,6 @@ from cyder.cydns.soa.models import SOA
 from cyder.cydns.view.models import View
 
 
-STEM = 'gen2/dns/stage'
-
-
 CONFIG_ZONE = """\
 zone "{zone_name}" IN {{
     type master;
@@ -44,10 +41,8 @@ def get_serial(filename):
 CachedSOA = namedtuple('CachedSOA', ('old_serial', 'new_serial', 'modified'))
 
 
+# FIXME: There's really no reason for this to be a class at the moment.
 class DNSBuilder(object):
-    def __init__(self):
-        pass
-
     @transaction_atomic
     def build(self, force=False):
         times = BuildTime.objects.get()
@@ -61,58 +56,54 @@ class DNSBuilder(object):
 
         config = {}
 
-        config_dir = path.join(STEM, 'config')
-        try:
-            os.makedirs(config_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
+        build_dir = settings.DNSBUILD['stage_dir']
+        bind_dir = settings.DNSBUILD['bind_prefix']
+        config_dir = 'config'
+        rev_dir = 'reverse'
 
-        rev_dir = path.join(STEM, 'reverse')
-        try:
-            os.makedirs(rev_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-
-        for v in views:
-            config[v.pk] = open(
-                path.join(config_dir, 'master.' + v.name), 'w')
-
-        for s in SOA.objects.filter(dns_enabled=True):
-            if s.is_reverse:
-                suffix = list(islice(
-                    reversed(s.root_domain.name.split('.')),
-                    0, 2))
-                suffix = '.'.join(reversed(suffix))
-
-                f_dir = path.join(
-                    rev_dir,
-                    suffix
-                )
-            else:
-                f_dir = path.join(
-                    STEM,
-                    '/'.join(list(reversed(s.root_domain.name.split('.'))))
-                )
-
+        for d in (config_dir, rev_dir):
             try:
-                os.makedirs(f_dir)
+                os.makedirs(path.join(build_dir, d))
             except OSError as e:
                 if e.errno != errno.EEXIST:
                     raise
 
-            f_name_base = path.join(f_dir, s.root_domain.name)
+        for v in views:
+            config[v.pk] = open(
+                path.join(build_dir, config_dir, 'master.' + v.name), 'w')
+
+        for s in SOA.objects.filter(dns_enabled=True):
+
+            if s.is_reverse:
+                last_two = list(islice(
+                    reversed(s.root_domain.name.split('.')),
+                    0, 2))
+
+                f_dir = path.join(
+                    rev_dir,
+                    '.'.join(reversed(last_two))
+                )
+            else:
+                f_dir = '/'.join(reversed(s.root_domain.name.split('.')))
+
+            try:
+                os.makedirs(path.join(build_dir, f_dir))
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
 
             new_serial = -1
 
+            f_name_prefix = path.join(f_dir, s.root_domain.name)
+
             for v in views:
-                f_name = f_name_base + '.' + v.name
+                f_name = f_name_prefix + '.' + v.name
 
                 config[v.pk].write(CONFIG_ZONE.format(
-                    zone_name=s.root_domain.name, f_name=f_name))
+                    zone_name=s.root_domain.name,
+                    f_name=path.join(bind_dir, f_name)))
 
-                file_serial = get_serial(f_name)
+                file_serial = get_serial(path.join(build_dir, f_name))
                 if s.dirty or file_serial != s.serial or force:
                     new_serial = max(
                         new_serial - 1, s.serial, time_serial - 1,
@@ -120,9 +111,9 @@ class DNSBuilder(object):
 
             if new_serial > -1:
                 for v in views:
-                    f_name = f_name_base + '.' + v.name
+                    f_name = f_name_prefix + '.' + v.name
                     print f_name
-                    with open(f_name, 'wb') as f:
+                    with open(path.join(build_dir, f_name), 'wb') as f:
                         f.write(s.dns_build(view=v, serial=new_serial))
 
                 cache[s.pk] = CachedSOA(
