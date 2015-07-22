@@ -44,7 +44,7 @@ CachedSOA = namedtuple('CachedSOA', ('old_serial', 'new_serial', 'modified'))
 # FIXME: There's really no reason for this to be a class at the moment.
 class DNSBuilder(object):
     @transaction_atomic
-    def build(self, force=False):
+    def build(self, rebuild_all=False, push=False, skip_sanity_check=False):
         times = BuildTime.objects.get()
         old_start = times.start
         times.start = datetime.now()
@@ -56,24 +56,27 @@ class DNSBuilder(object):
 
         config = {}
 
-        build_dir = settings.DNSBUILD['stage_dir']
+        stage_dir = settings.DNSBUILD['stage_dir']
+        prod_dir = settings.DNSBUILD['prod_dir']
         bind_dir = settings.DNSBUILD['bind_prefix']
         config_dir = 'config'
         rev_dir = 'reverse'
 
+        in_db = set()
+        built = set()
+
         for d in (config_dir, rev_dir):
             try:
-                os.makedirs(path.join(build_dir, d))
+                os.makedirs(path.join(stage_dir, d))
             except OSError as e:
                 if e.errno != errno.EEXIST:
                     raise
 
         for v in views:
             config[v.pk] = open(
-                path.join(build_dir, config_dir, 'master.' + v.name), 'w')
+                path.join(stage_dir, config_dir, 'master.' + v.name), 'w')
 
         for s in SOA.objects.filter(dns_enabled=True):
-
             if s.is_reverse:
                 last_two = list(islice(
                     reversed(s.root_domain.name.split('.')),
@@ -87,7 +90,7 @@ class DNSBuilder(object):
                 f_dir = '/'.join(reversed(s.root_domain.name.split('.')))
 
             try:
-                os.makedirs(path.join(build_dir, f_dir))
+                os.makedirs(path.join(stage_dir, f_dir))
             except OSError as e:
                 if e.errno != errno.EEXIST:
                     raise
@@ -103,26 +106,64 @@ class DNSBuilder(object):
                     zone_name=s.root_domain.name,
                     f_name=path.join(bind_dir, f_name)))
 
-                file_serial = get_serial(path.join(build_dir, f_name))
-                if s.dirty or file_serial != s.serial or force:
+                file_serial = get_serial(path.join(prod_dir, f_name))
+                if s.dirty or file_serial != s.serial or rebuild_all:
                     new_serial = max(
                         new_serial - 1, s.serial, time_serial - 1,
                         file_serial) + 1
+
+                in_db.add(f_name)
 
             if new_serial > -1:
                 for v in views:
                     f_name = f_name_prefix + '.' + v.name
                     print f_name
-                    with open(path.join(build_dir, f_name), 'wb') as f:
+
+                    f_path = path.join(stage_dir, f_name)
+
+                    with open(f_path, 'wb') as f:
                         f.write(s.dns_build(view=v, serial=new_serial))
+
+                    built.add(f_name)
 
                 cache[s.pk] = CachedSOA(
                     old_serial=s.serial, new_serial=new_serial,
                     modified=s.modified)
 
-        for pk, c in cache.iteritems():
-            SOA.objects.filter(pk=pk, modified=c.modified).update(
-                dirty=False, serial=c.new_serial)
-
         for f in config.itervalues():
             f.close()
+
+        size_diff = 0
+        to_remove = []
+
+        striplen = len(prod_dir) + 1
+        first = True
+        for dirpath, dirnames, filenames in os.walk(prod_dir):
+            if first:
+                dirnames.remove('config')
+                first = False
+
+            empty = True
+            for filename in filenames:
+                p = path.join(dirpath, filename)
+                n = p[striplen:]
+
+                prod_size = os.stat(p).st_size
+                if n in built:
+                    stage_size = os.stat(path.join(stage_dir, n)).st_size
+                    size_diff += stage_size - prod_size
+                    built.remove(n)
+                    empty = False
+                elif n not in in_db:
+                    size_diff -= prod_size
+                    to_remove.append(p)
+                else:
+                    empty = False
+
+        for n in built:
+            size_diff += os.stat(path.join(stage_dir, n)).st_size
+
+        if push:
+            for pk, c in cache.iteritems():
+                SOA.objects.filter(pk=pk, modified=c.modified).update(
+                    dirty=False, serial=c.new_serial)
