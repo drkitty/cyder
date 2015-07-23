@@ -160,8 +160,8 @@ class DNSBuilder(object):
                     size_diff -= prod_size
                     to_remove.append(p)
 
-            if empty and all((path.join(dirpath, d) in to_rmdir)
-                    for d in dirnames):
+            if empty and all(
+                    (path.join(dirpath, d) in to_rmdir) for d in dirnames):
                 print dirpath
                 to_rmdir.add(dirpath)
 
