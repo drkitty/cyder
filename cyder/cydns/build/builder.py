@@ -137,13 +137,12 @@ class DNSBuilder(object):
 
         size_diff = 0
         to_remove = []
+        to_rmdir = set()
 
         striplen = len(prod_dir) + 1
-        first = True
-        for dirpath, dirnames, filenames in os.walk(prod_dir):
-            if first:
-                dirnames.remove('config')
-                first = False
+        for dirpath, dirnames, filenames in os.walk(prod_dir, topdown=False):
+            if dirpath.endswith('/' + config_dir):
+                continue
 
             empty = True
             for filename in filenames:
@@ -151,16 +150,20 @@ class DNSBuilder(object):
                 n = p[striplen:]
 
                 prod_size = os.stat(p).st_size
-                if n in built:
-                    stage_size = os.stat(path.join(stage_dir, n)).st_size
-                    size_diff += stage_size - prod_size
-                    built.remove(n)
+                if n in in_db:
                     empty = False
-                elif n not in in_db:
+                    if n in built:
+                        stage_size = os.stat(path.join(stage_dir, n)).st_size
+                        size_diff += stage_size - prod_size
+                        built.remove(n)
+                else:
                     size_diff -= prod_size
                     to_remove.append(p)
-                else:
-                    empty = False
+
+            if empty and all((path.join(dirpath, d) in to_rmdir)
+                    for d in dirnames):
+                print dirpath
+                to_rmdir.add(dirpath)
 
         for n in built:
             size_diff += os.stat(path.join(stage_dir, n)).st_size
