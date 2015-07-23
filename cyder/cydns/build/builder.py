@@ -11,7 +11,7 @@ from time import mktime
 
 from django.conf import settings
 
-from cyder.base.utils import transaction_atomic
+from cyder.base.utils import copy_tree, remove_dir_contents, transaction_atomic
 from cyder.cydns.build.models import BuildTime
 from cyder.cydns.soa.models import SOA
 from cyder.cydns.view.models import View
@@ -64,6 +64,8 @@ class DNSBuilder(object):
 
         in_db = set()
         built = set()
+
+        remove_dir_contents(stage_dir)
 
         for d in (config_dir, rev_dir):
             try:
@@ -163,7 +165,16 @@ class DNSBuilder(object):
         for n in built:
             size_diff += os.stat(path.join(stage_dir, n)).st_size
 
+        print size_diff
+
         if push:
+            for n in to_remove:
+                os.remove(n)
+            for d in to_rmdir:
+                os.rmdir(d)
+
+            copy_tree(stage_dir, prod_dir)
+
             for pk, c in cache.iteritems():
                 SOA.objects.filter(pk=pk, modified=c.modified).update(
                     dirty=False, serial=c.new_serial)
