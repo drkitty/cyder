@@ -91,12 +91,6 @@ class DNSBuilder(object):
             else:
                 f_dir = '/'.join(reversed(s.root_domain.name.split('.')))
 
-            try:
-                os.makedirs(path.join(stage_dir, f_dir))
-            except OSError as e:
-                if e.errno != errno.EEXIST:
-                    raise
-
             new_serial = -1
 
             f_name_prefix = path.join(f_dir, s.root_domain.name)
@@ -117,6 +111,12 @@ class DNSBuilder(object):
                 in_db.add(f_name)
 
             if new_serial > -1:
+                try:
+                    os.makedirs(path.join(stage_dir, f_dir))
+                except OSError as e:
+                    if e.errno != errno.EEXIST:
+                        raise
+
                 for v in views:
                     f_name = f_name_prefix + '.' + v.name
                     print f_name
