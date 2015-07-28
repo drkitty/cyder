@@ -41,8 +41,36 @@ def get_serial(filename):
 CachedSOA = namedtuple('CachedSOA', ('old_serial', 'new_serial', 'modified'))
 
 
+def make_loggers(verbosity, count):
+    def logger_maker(verbosity):
+        def prnt(str):
+            print str
+
+        def nop(str):
+            pass
+
+        for i in range(verbosity + 1):
+            yield prnt
+
+        while True:
+            yield nop
+
+    m = logger_maker(verbosity)
+
+    l = []
+    for i in range(count):
+        l.append(next(m))
+
+    return l
+
+
 @transaction_atomic
-def dns_build(rebuild_all=False, push=False, skip_sanity_check=False):
+def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
+        verbosity=0, to_syslog=False):
+    v0, v1, v2 = make_loggers(verbosity, count=3)
+
+    v0('Building...')
+
     times = BuildTime.objects.get()
     old_start = times.start
     times.start = datetime.now()
@@ -64,6 +92,8 @@ def dns_build(rebuild_all=False, push=False, skip_sanity_check=False):
     built = set()
 
     remove_dir_contents(stage_dir)
+    if dry_run:
+        copy_tree(prod_dir, stage_dir)
 
     for d in (config_dir, rev_dir):
         try:
@@ -165,9 +195,11 @@ def dns_build(rebuild_all=False, push=False, skip_sanity_check=False):
     for n in built:
         size_diff += os.stat(path.join(stage_dir, n)).st_size
 
-    print size_diff
+    v2('prod size - stage size = {}'.format(size_diff))
 
-    if push:
+    if not dry_run:
+        v0('Syncing to production directory...')
+
         for n in to_remove:
             os.remove(n)
         for d in to_rmdir:
@@ -178,3 +210,5 @@ def dns_build(rebuild_all=False, push=False, skip_sanity_check=False):
         for pk, c in cache.iteritems():
             SOA.objects.filter(pk=pk, modified=c.modified).update(
                 dirty=False, serial=c.new_serial)
+
+    v0('Build complete')
