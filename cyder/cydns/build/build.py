@@ -135,7 +135,7 @@ def dns_build(rebuild_all=False, push=False, skip_sanity_check=False):
 
     size_diff = 0
     to_remove = []
-    to_rmdir = set()
+    to_rmdir = []
 
     striplen = len(prod_dir) + 1
     for dirpath, dirnames, filenames in os.walk(prod_dir, topdown=False):
@@ -160,8 +160,7 @@ def dns_build(rebuild_all=False, push=False, skip_sanity_check=False):
 
         if empty and all(
                 (path.join(dirpath, d) in to_rmdir) for d in dirnames):
-            print dirpath
-            to_rmdir.add(dirpath)
+            to_rmdir.append(dirpath)
 
     for n in built:
         size_diff += os.stat(path.join(stage_dir, n)).st_size
