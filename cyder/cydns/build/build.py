@@ -81,7 +81,10 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
     l = Logger(to_syslog=to_syslog, verbosity=verbosity)
 
     with mail_if_failure('A Cyder DNS build failed', logger=l):
-        l.log_notice('Building...')
+        if rebuild_all:
+            l.log_notice('Building all zones...')
+        else:
+            l.log_notice('Building out-of-date zones...')
 
         times = BuildTime.objects.get()
         old_start = times.start
