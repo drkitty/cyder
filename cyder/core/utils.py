@@ -1,6 +1,7 @@
 import smtplib
 import syslog
 from email.mime.text import MIMEText
+from functools import wraps
 
 from django.conf import settings
 
@@ -46,11 +47,15 @@ def fail_mail(content, subject,
     msg['Subject'] = subject
     msg['From'] = from_
     msg['To'] = ', '.join(to)
-    s = smtplib.SMTP(settings.FAIL_EMAIL_SERVER)
+    s = smtplib.SMTP(settings.FAIL_EMAIL_SERVER, 587)
+    s.set_debuglevel(True)
+    s.starttls()
+    s.ehlo()
     s.sendmail(from_, to, msg.as_string())
     s.quit()
 
 
+"""
 def mail_if_failure(msg, ignore=()):
     def outer(func):
         def inner(self, *args, **kwargs):
@@ -73,3 +78,27 @@ def mail_if_failure(msg, ignore=()):
         outer.__module__ = func.__module__
         return inner
     return outer
+"""
+
+
+class mail_if_failure(object):
+    def __init__(self, msg, logger, ignore=()):
+        self.msg = msg
+        self.ignore = ignore
+        self.logger = logger
+
+    def __call__(self, func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            with self:
+                func(*args, **kwargs)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type is not None and exc_type not in self.ignore:
+            error = self.msg + '\n' + format_exc_verbose()
+            self.logger.log(syslog.LOG_ERR, error)
+            if not settings.TESTING:
+                fail_mail(error, subject=self.msg)
