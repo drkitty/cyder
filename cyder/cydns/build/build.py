@@ -13,7 +13,7 @@ from time import mktime
 from django.conf import settings
 
 from cyder.base.utils import (
-    copy_tree, Logger, remove_dir_contents, transaction_atomic)
+    copy_tree, Logger, remove_dir_contents, run_command, transaction_atomic)
 from cyder.core.utils import mail_if_failure
 from cyder.cydns.build.models import BuildTime
 from cyder.cydns.soa.models import SOA
@@ -42,6 +42,9 @@ def get_serial(filename):
 
 
 CachedSOA = namedtuple('CachedSOA', ('old_serial', 'new_serial', 'modified'))
+
+
+ConfigFile = namedtuple('ConfigFile', ('f', 'name'))
 
 
 class Logger(object):
@@ -75,6 +78,18 @@ class Logger(object):
         raise Exception(msg)
 
 
+def check_zone(zonename, filename, logger):
+    run_command(
+        settings.DNSBUILD['named_checkzone'] + ' ' + zonename + ' ' + filename,
+        logger=logger)
+
+
+def check_conf(filename, logger):
+    run_command(
+        settings.DNSBUILD['named_checkconf'] + ' ' + filename,
+        logger=logger)
+
+
 @transaction_atomic
 def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
         verbosity=0, to_syslog=False):
@@ -97,6 +112,8 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
 
         config = {}
 
+        # Set up directories.
+
         stage_dir = settings.DNSBUILD['stage_dir']
         prod_dir = settings.DNSBUILD['prod_dir']
         bind_dir = settings.DNSBUILD['bind_prefix']
@@ -117,9 +134,14 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
                 if e.errno != errno.EEXIST:
                     raise
 
+        # Open config files.
+
         for v in views:
-            config[v.pk] = open(
-                path.join(stage_dir, config_dir, 'master.' + v.name), 'w')
+            name = 'master.' + v.name
+            config[v.pk] = ConfigFile(
+                f=open(path.join(stage_dir, config_dir, name), 'w'), name=name)
+
+        # Build zones.
 
         for s in SOA.objects.filter(dns_enabled=True):
             if s.is_reverse:
@@ -141,7 +163,7 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
             for v in views:
                 f_name = f_name_prefix + '.' + v.name
 
-                config[v.pk].write(CONFIG_ZONE.format(
+                config[v.pk].f.write(CONFIG_ZONE.format(
                     zone_name=s.root_domain.name,
                     f_name=path.join(bind_dir, f_name)))
 
@@ -154,6 +176,8 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
                 in_db.add(f_name)
 
             if new_serial > -1:
+                # For each view, build zone and check it.
+
                 try:
                     os.makedirs(path.join(stage_dir, f_dir))
                 except OSError as e:
@@ -162,21 +186,36 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
 
                 for v in views:
                     f_name = f_name_prefix + '.' + v.name
-                    l.log_debug('  ' + f_name)
+                    l.log_debug('Building ' + f_name)
 
                     f_path = path.join(stage_dir, f_name)
 
                     with open(f_path, 'wb') as f:
-                        f.write(s.dns_build(view=v, serial=new_serial))
+                        f.write(s.dns_build(view=v, serial=new_serial) + '\n')
+                    check_zone(s.root_domain.name, f_path, logger=l)
 
                     built.add(f_name)
 
                 cache[s.pk] = CachedSOA(
                     old_serial=s.serial, new_serial=new_serial,
                     modified=s.modified)
+            else:
+                # For each view, check prod zone.
 
-        for f in config.itervalues():
+                for v in views:
+                    f_name = f_name_prefix + '.' + v.name
+                    check_zone(
+                        s.root_domain.name, path.join(prod_dir, f_name),
+                        logger=l)
+
+
+        # Close config files.
+
+        for f, name in config.itervalues():
             f.close()
+            check_conf(path.join(stage_dir, config_dir, name), l)
+
+        # Get size difference between prod and stage.
 
         size_diff = 0
         to_remove = []
@@ -212,6 +251,8 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
 
         l.log_notice('prod size - stage size = {}'.format(size_diff))
 
+        # Do sanity check.
+
         if sanity_check:
             if size_diff > settings.DNSBUILD['line_increase_limit']:
                 raise Exception(
@@ -223,6 +264,7 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
                     'Line decrease ({}) exceeded limit ({})'.format(
                         -size_diff, settings.DNSBUILD['line_decrease_limit']))
 
+        # Sync to prod directory if requested.
 
         if dry_run:
             l.log_notice(
