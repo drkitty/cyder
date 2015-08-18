@@ -70,9 +70,9 @@ class Logger(object):
 
     def error(self, msg):
         self.log(syslog.LOG_ERR, msg)
-        print msg
         with open(settings.DNSBUILD['stop_file'], 'w') as f:
             f.write(msg)
+        raise Exception(msg)
 
 
 @transaction_atomic
