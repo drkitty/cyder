@@ -152,7 +152,7 @@ class PTR(BaseModel, BasePTR, Ip, ViewMixin, ObjectUrlMixin):
     fqdn = models.CharField(
         max_length=255, blank=True, validators=[validate_fqdn], db_index=True
     )
-    ttl = models.PositiveIntegerField(default=3600, blank=True, null=True,
+    ttl = models.PositiveIntegerField(default=3600, blank=False, null=False,
                                       validators=[validate_ttl],
                                       verbose_name="Time to live")
     description = models.CharField(max_length=1000, blank=True)

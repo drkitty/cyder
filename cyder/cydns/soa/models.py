@@ -51,7 +51,7 @@ class SOA(BaseModel, ObjectUrlMixin):
     pretty_type = 'SOA'
 
     id = models.AutoField(primary_key=True)
-    ttl = models.PositiveIntegerField(default=3600, blank=True, null=True,
+    ttl = models.PositiveIntegerField(default=3600, blank=False, null=False,
                                       validators=[validate_ttl],
                                       verbose_name="Time to live")
     primary = models.CharField(max_length=100, validators=[validate_fqdn])
