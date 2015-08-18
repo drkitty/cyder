@@ -228,5 +228,5 @@ def render_dns_record(**info):
             'algorithm', 'fp_type', 'rdata'):
         field = str(info.get(x, ''))
         ss.append(field)
-        ss.append(' ' * max(0, widths[x] - len(field)))
+        ss.append(' ' * max(1 if field else 0, widths[x] - len(field)))
     return ''.join(ss)
