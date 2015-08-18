@@ -213,6 +213,7 @@ PROD_LANGUAGES = (
 
 # sender
 FAIL_EMAIL_FROM = 'cyder@localhost'
+FAIL_EMAIL_PASSWORD = ''
 
 # recipients
 FAIL_EMAIL_TO = (
