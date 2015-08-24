@@ -1,10 +1,12 @@
 import distutils.dir_util
+import errno
 import operator
 import os
 import shlex
 import shutil
 import subprocess
 import syslog
+import time
 from copy import copy
 from os import path
 from sys import stderr
@@ -277,3 +279,27 @@ def format_exc_verbose():
     last_frame = last_frame[last_frame.find('\n')+1 : ]
     s += last_frame
     return s
+
+
+def check_stop_file(filename, interval):
+    """
+    Returns (exists, reason, send_email).
+    """
+
+    try:
+        with open(filename) as stop_file:
+            now = time.time()
+            reason = stop_file.read()
+        last_mod = os.path.getmtime(filename)
+
+        send_email = now > last_mod  # stop file was modified in the past
+        if send_email:
+            future = now + settings.DNSBUILD['stop_file_email_interval']
+            os.utime(settings.DNSBUILD['stop_file'], (future, future))
+
+        return True, reason, send_email
+    except IOError as e:
+        if e.errno != errno.ENOENT:  # "No such file or directory"
+            raise
+
+    return False, None, False

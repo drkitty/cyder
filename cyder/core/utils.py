@@ -54,10 +54,19 @@ def fail_mail(content, subject,
     s.quit()
 
 
+class MailSuppressionWrapper(Exception):
+    def __init__(self, exc_type, exc_value, traceback):
+        self.exc_type = exc_type
+        self.exc_value = exc_value
+        self.traceback = traceback
+
+    def reraise(self):
+        raise self.exc_type, self.exc_value, self.traceback
+
+
 class mail_if_failure(object):
-    def __init__(self, msg, logger, ignore=()):
+    def __init__(self, msg, logger):
         self.msg = msg
-        self.ignore = ignore
         self.logger = logger
 
     def __call__(self, func):
@@ -70,8 +79,20 @@ class mail_if_failure(object):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        if exc_type is not None and exc_type not in self.ignore:
+        if exc_type is MailSuppressionWrapper:
+            exc_value.reraise()
+
+        if exc_type is not None:
             error = self.msg + '\n' + format_exc_verbose()
             self.logger.log(syslog.LOG_ERR, error)
             if not settings.TESTING:
                 fail_mail(error, subject=self.msg)
+
+
+class dont_mail(object):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type is not None:
+            raise MailSuppressionWrapper(exc_type, exc_value, traceback)

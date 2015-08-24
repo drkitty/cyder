@@ -13,8 +13,9 @@ from time import mktime
 from django.conf import settings
 
 from cyder.base.utils import (
-    copy_tree, Logger, remove_dir_contents, run_command, transaction_atomic)
-from cyder.core.utils import mail_if_failure
+    check_stop_file, copy_tree, Logger, remove_dir_contents, run_command,
+    StopFileExists, transaction_atomic)
+from cyder.core.utils import dont_mail, fail_mail, mail_if_failure
 from cyder.cydns.build.models import BuildTime
 from cyder.cydns.soa.models import SOA
 from cyder.cydns.view.models import View
@@ -71,10 +72,11 @@ class Logger(object):
         self.log(syslog.LOG_NOTICE, msg)
         print msg
 
-    def error(self, msg):
+    def error(self, msg, set_stop_file=True):
         self.log(syslog.LOG_ERR, msg)
-        with open(settings.DNSBUILD['stop_file'], 'w') as f:
-            f.write(msg)
+        if set_stop_file:
+            with open(settings.DNSBUILD['stop_file'], 'w') as f:
+                f.write(msg)
         raise Exception(msg)
 
 
@@ -95,7 +97,30 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
         verbosity=0, to_syslog=False):
     l = Logger(to_syslog=to_syslog, verbosity=verbosity)
 
-    with mail_if_failure('A Cyder DNS build failed', logger=l):
+    with mail_if_failure('Cyder DNS build failed', logger=l):
+        stop_file_exists, stop_reason, send_email = check_stop_file(
+            settings.DNSBUILD['stop_file'],
+            settings.DNSBUILD['stop_file_email_interval'])
+        if stop_file_exists:
+            if send_email:
+                l.log_debug("Sending email about stop file")
+                fail_mail(
+                    "Cyder DNS build aborted because the stop file ({}) "
+                    "exists.\nReason:\n".format(
+                        settings.DNSBUILD['stop_file']) + stop_reason,
+                    subject="Cyder DNS build aborted because stop file exists")
+            else:
+                l.log_debug("Not sending email about stop file")
+
+            with dont_mail():
+                l.error(
+                    "The stop file ({}) exists. Aborting build{}.\n"
+                    "Reason:\n".format(
+                        settings.DNSBUILD['stop_file'],
+                        " and sending email" if send_email else ""
+                    ) + stop_reason,
+                    set_stop_file=False)
+
         if rebuild_all:
             l.log_notice('Building all zones...')
         else:
@@ -285,3 +310,5 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
                     dirty=False, serial=c.new_serial)
 
         l.log_notice('Build complete')
+
+    return 0

@@ -42,10 +42,10 @@ class Command(BaseCommand):
             syslog.openlog('dhcp_build', facility=syslog.LOG_LOCAL6)
             builder_opts['to_syslog'] = True
 
-        dns_build(
+        exit(dns_build(
             rebuild_all=options['rebuild_all'],
             dry_run=options['dry_run'],
             sanity_check=options['sanity_check'],
             verbosity=int(options['verbosity']),
             to_syslog=options['to_syslog'],
-        )
+        ))
