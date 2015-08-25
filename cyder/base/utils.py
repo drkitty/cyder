@@ -66,6 +66,47 @@ class Logger(object):
         raise Exception(msg)
 
 
+class UnixLogger(Logger):
+    def __init__(self, to_syslog, verbosity):
+        self.to_syslog = to_syslog
+        self.verbosity = verbosity
+
+    def log(self, log_level, msg):
+        if self.to_syslog:
+            for line in msg.splitlines():
+                syslog.syslog(log_level, line)
+
+    def log_debug(self, msg):
+        self.log(syslog.LOG_DEBUG, msg)
+        if self.verbosity >= 2:
+            print msg
+
+    def log_info(self, msg):
+        self.log(syslog.LOG_INFO, msg)
+        if self.verbosity >= 1:
+            print msg
+
+    def log_notice(self, msg):
+        self.log(syslog.LOG_NOTICE, msg)
+        print msg
+
+    def error(self, msg, set_stop_file=True):
+        self.log(syslog.LOG_ERR, msg)
+        raise Exception(msg)
+
+
+def build_sanity_check(size_diff, size_increase_limit, size_decrease_limit):
+    if size_increase_limit is not None and size_diff > size_increase_limit:
+        raise Exception(
+            "Size increase ({}) exceeds limit ({})".format(
+                size_diff, size_increase_limit))
+
+    if size_decrease_limit is not None and -size_diff > size_decrease_limit:
+        raise Exception(
+            "Size decrease ({}) exceeds limit ({})".format(
+                -size_diff, size_decrease_limit))
+
+
 def run_command(command, logger=Logger(), ignore_failure=False,
                 failure_msg=None):
     # A single default Logger instance is shared between every call to this

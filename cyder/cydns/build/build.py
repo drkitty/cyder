@@ -13,8 +13,8 @@ from time import mktime
 from django.conf import settings
 
 from cyder.base.utils import (
-    check_stop_file, copy_tree, Logger, mutex, remove_dir_contents,
-    run_command, StopFileExists, transaction_atomic)
+    build_sanity_check, check_stop_file, copy_tree, mutex, remove_dir_contents,
+    run_command, transaction_atomic, UnixLogger)
 from cyder.core.utils import dont_mail_if_failure, fail_mail, mail_if_failure
 from cyder.cydns.build.models import BuildTime
 from cyder.cydns.soa.models import SOA
@@ -48,36 +48,12 @@ CachedSOA = namedtuple('CachedSOA', ('old_serial', 'new_serial', 'modified'))
 ConfigFile = namedtuple('ConfigFile', ('f', 'name'))
 
 
-class Logger(object):
-    def __init__(self, to_syslog, verbosity):
-        self.to_syslog = to_syslog
-        self.verbosity = verbosity
-
-    def log(self, log_level, msg):
-        if self.to_syslog:
-            for line in msg.splitlines():
-                syslog.syslog(log_level, line)
-
-    def log_debug(self, msg):
-        self.log(syslog.LOG_DEBUG, msg)
-        if self.verbosity >= 2:
-            print msg
-
-    def log_info(self, msg):
-        self.log(syslog.LOG_INFO, msg)
-        if self.verbosity >= 1:
-            print msg
-
-    def log_notice(self, msg):
-        self.log(syslog.LOG_NOTICE, msg)
-        print msg
-
+class DNSBuildLogger(UnixLogger):
     def error(self, msg, set_stop_file=True):
-        self.log(syslog.LOG_ERR, msg)
         if set_stop_file:
             with open(settings.DNSBUILD['stop_file'], 'w') as f:
                 f.write(msg)
-        raise Exception(msg)
+        super(DNSBuildLogger, self).error(msg, set_stop_file=set_stop_file)
 
 
 def check_zone(zonename, filename, logger):
@@ -95,9 +71,9 @@ def check_conf(filename, logger):
 @transaction_atomic
 def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
         verbosity=0, to_syslog=False):
-    l = Logger(to_syslog=to_syslog, verbosity=verbosity)
+    l = DNSBuildLogger(to_syslog=to_syslog, verbosity=verbosity)
 
-    with mail_if_failure('Cyder DNS build failed', logger=l), \
+    with mail_if_failure("Cyder DNS build failed", logger=l), \
             mutex(
                 lock_file=settings.DNSBUILD['lock_file'],
                 pid_file=settings.DNSBUILD['pid_file'], logger=l):
@@ -108,16 +84,16 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
             if send_email:
                 l.log_debug("Sending email about stop file")
                 fail_mail(
-                    "Cyder DNS build aborted because the stop file ({}) "
+                    "Cyder DNS build skipped because the stop file ({}) "
                     "exists.\nReason:\n".format(
                         settings.DNSBUILD['stop_file']) + stop_reason,
-                    subject="Cyder DNS build aborted because stop file exists")
+                    subject="Cyder DNS build skipped because stop file exists")
             else:
                 l.log_debug("Not sending email about stop file")
 
             with dont_mail_if_failure():
                 l.error(
-                    "The stop file ({}) exists. Aborting build{}.\n"
+                    "The stop file ({}) exists. Skipping build{}.\n"
                     "Reason:\n".format(
                         settings.DNSBUILD['stop_file'],
                         " and sending email" if send_email else ""
@@ -125,9 +101,9 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
                     set_stop_file=False)
 
         if rebuild_all:
-            l.log_notice('Building all zones...')
+            l.log_notice("Building all zones...")
         else:
-            l.log_notice('Building out-of-date zones...')
+            l.log_notice("Building out-of-date zones...")
 
         times = BuildTime.objects.get()
         old_start = times.start
@@ -214,7 +190,7 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
 
                 for v in views:
                     f_name = f_name_prefix + '.' + v.name
-                    l.log_debug('Building ' + f_name)
+                    l.log_debug("Building " + f_name)
 
                     f_path = path.join(stage_dir, f_name)
 
@@ -277,29 +253,21 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
         for n in built:
             size_diff += os.stat(path.join(stage_dir, n)).st_size
 
-        l.log_notice('prod size - stage size = {}'.format(size_diff))
+        l.log_notice("prod size - stage size = {}".format(size_diff))
 
         # Do sanity check.
 
         if sanity_check:
-            if size_diff > settings.DNSBUILD['line_increase_limit']:
-                raise Exception(
-                    'Line increase ({}) exceeded limit ({})'.format(
-                        size_diff, settings.DNSBUILD['line_increase_limit']))
-
-            if -size_diff > settings.DNSBUILD['line_decrease_limit']:
-                raise Exception(
-                    'Line decrease ({}) exceeded limit ({})'.format(
-                        -size_diff, settings.DNSBUILD['line_decrease_limit']))
+            build_sanity_check(
+                size_diff, settings.DNSBUILD['size_increase_limit'],
+                settings.DNSBUILD['size_decrease_limit'])
 
         # Sync to prod directory if requested.
 
         if dry_run:
-            l.log_notice(
-                'Leaving production directory alone because -n/--dry-run '
-                'was passed')
+            l.log_notice("Not syncing to production directory")
         else:
-            l.log_notice('Syncing to production directory...')
+            l.log_notice("Syncing to production directory...")
 
             for n in to_remove:
                 os.remove(n)
@@ -312,6 +280,4 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
                 SOA.objects.filter(pk=pk, modified=c.modified).update(
                     dirty=False, serial=c.new_serial)
 
-        l.log_notice('Build complete')
-
-    return 0
+        l.log_notice("Build complete")
