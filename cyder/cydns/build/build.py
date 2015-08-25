@@ -13,9 +13,9 @@ from time import mktime
 from django.conf import settings
 
 from cyder.base.utils import (
-    check_stop_file, copy_tree, Logger, remove_dir_contents, run_command,
-    StopFileExists, transaction_atomic)
-from cyder.core.utils import dont_mail, fail_mail, mail_if_failure
+    check_stop_file, copy_tree, Logger, mutex, remove_dir_contents,
+    run_command, StopFileExists, transaction_atomic)
+from cyder.core.utils import dont_mail_if_failure, fail_mail, mail_if_failure
 from cyder.cydns.build.models import BuildTime
 from cyder.cydns.soa.models import SOA
 from cyder.cydns.view.models import View
@@ -97,7 +97,10 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
         verbosity=0, to_syslog=False):
     l = Logger(to_syslog=to_syslog, verbosity=verbosity)
 
-    with mail_if_failure('Cyder DNS build failed', logger=l):
+    with mail_if_failure('Cyder DNS build failed', logger=l), \
+            mutex(
+                lock_file=settings.DNSBUILD['lock_file'],
+                pid_file=settings.DNSBUILD['pid_file'], logger=l):
         stop_file_exists, stop_reason, send_email = check_stop_file(
             settings.DNSBUILD['stop_file'],
             settings.DNSBUILD['stop_file_email_interval'])
@@ -112,7 +115,7 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
             else:
                 l.log_debug("Not sending email about stop file")
 
-            with dont_mail():
+            with dont_mail_if_failure():
                 l.error(
                     "The stop file ({}) exists. Aborting build{}.\n"
                     "Reason:\n".format(

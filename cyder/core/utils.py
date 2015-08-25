@@ -89,7 +89,7 @@ class mail_if_failure(object):
                 fail_mail(error, subject=self.msg)
 
 
-class dont_mail(object):
+class dont_mail_if_failure(object):
     def __enter__(self):
         return self
 
