@@ -151,6 +151,9 @@ class Domain(BaseModel, ObjectUrlMixin):
 
         super(Domain, self).delete(*args, **kwargs)
 
+        # There's no need to rebuild this domain's zone because the domain
+        # can't have had children.
+
     @transaction_atomic
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -164,7 +167,8 @@ class Domain(BaseModel, ObjectUrlMixin):
             child.soa = self.soa
             child.save(commit=False)  # Recurse.
 
-        self.domain.soa.save(commit=False)
+        # There's no need to rebuild this domain's zone because if it's new it
+        # has no children and if it has children it can't have been renamed.
 
     @property
     def ip_type(self):

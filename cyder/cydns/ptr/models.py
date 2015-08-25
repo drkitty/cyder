@@ -211,20 +211,20 @@ class PTR(BaseModel, BasePTR, Ip, ViewMixin, ObjectUrlMixin):
             old_range = find_range(old_ip)
 
         super(PTR, self).save(*args, **kwargs)
-        self.schedule_zone_rebuild()
         rng = self.range
         if rng and update_range_usage:
             rng.save(commit=False)
             if old_range:
                 old_range.save(commit=False)
 
-        self.domain.soa.save(commit=False)
+        if self.reverse_domain.soa:
+            self.reverse_domain.soa.save(commit=False)
 
     @transaction_atomic
     def delete(self, *args, **kwargs):
         update_range_usage = kwargs.pop('update_range_usage', True)
         if self.reverse_domain.soa:
-            self.reverse_domain.soa.schedule_rebuild()
+            self.reverse_domain.soa.save(commit=False)
         rng = find_range(self.ip_str)
         super(PTR, self).delete(*args, **kwargs)
         if rng and update_range_usage:
@@ -248,10 +248,6 @@ class PTR(BaseModel, BasePTR, Ip, ViewMixin, ObjectUrlMixin):
             if self.ctnr not in self.range.ctnr_set.all():
                 raise ValidationError("Could not create PTR because %s is "
                                       "not in this container." % self.ip_str)
-
-    def schedule_zone_rebuild(self):
-        if self.reverse_domain.soa:
-            self.reverse_domain.soa.schedule_rebuild()
 
     def details(self):
         """For tables."""

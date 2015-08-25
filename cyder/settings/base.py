@@ -493,7 +493,7 @@ REST_FRAMEWORK = {
 }
 
 
-# bindbuild settings
+# dns_build settings
 # ==================
 
 

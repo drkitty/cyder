@@ -11,7 +11,7 @@ class DomainAPI_Test(APITests):
     def create_data(self):
         return Domain.objects.create(
             name='bing.' + self.domain.name, soa=self.domain.soa,
-            is_reverse=False, dirty=False, purgeable=False, delegated=True)
+            is_reverse=False, purgeable=False, delegated=True)
 
     def test_1_related(self):
         """Test that Domain relations work and make sense."""

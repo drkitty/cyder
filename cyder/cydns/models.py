@@ -169,7 +169,8 @@ class CydnsRecord(BaseModel, ViewMixin, ObjectUrlMixin):
         if call_prune_tree:
             prune_tree(objs_domain)
 
-        self.domain.soa.save(commit=False)
+        if self.domain.soa:
+            self.domain.soa.save(commit=False)
 
     def save(self, *args, **kwargs):
         if self.pk:
@@ -184,14 +185,12 @@ class CydnsRecord(BaseModel, ViewMixin, ObjectUrlMixin):
         no_build = kwargs.pop("no_build", False)
         super(CydnsRecord, self).save(*args, **kwargs)
 
-        if not no_build:
-            self.schedule_zone_rebuild()
+        if not no_build and self.domain.soa:
+            self.domain.soa.save(commit=False)
 
         if db_domain:
             from cyder.cydns.utils import prune_tree
             prune_tree(db_domain)
-
-        self.domain.soa.save(commit=False)
 
     def check_domain_ctnr(self):
         """
