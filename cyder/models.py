@@ -15,7 +15,6 @@ from cyder.cydhcp.workgroup.models import *
 from cyder.cydns.address_record.models import *
 from cyder.cydns.build.models import *
 from cyder.cydns.cname.models import *
-from cyder.cydns.cybind.models import *
 from cyder.cydns.domain.models import *
 from cyder.cydns.mx.models import *
 from cyder.cydns.nameserver.models import *

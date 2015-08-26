@@ -96,8 +96,8 @@ class LabelDomainMixin(LabelDomainUtilsMixin):
 
 class ViewMixin(models.Model):
 
-    def validate_views(instance, views):
-        instance.clean_views(views)
+    def validate_views(self, views):
+        self.clean_views(views)
 
     views = models.ManyToManyField(
         View, blank=True, validators=[validate_views]

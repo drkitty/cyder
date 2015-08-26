@@ -211,6 +211,8 @@ PROD_LANGUAGES = (
 ##########################
 
 
+ENABLE_FAIL_MAIL = True
+
 # sender
 FAIL_EMAIL_FROM = 'cyder@localhost'
 FAIL_EMAIL_PASSWORD = ''

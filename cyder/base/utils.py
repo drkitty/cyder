@@ -95,14 +95,18 @@ class UnixLogger(Logger):
         raise Exception(msg)
 
 
+class SanityCheckFailure(Exception):
+    pass
+
+
 def build_sanity_check(size_diff, size_increase_limit, size_decrease_limit):
     if size_increase_limit is not None and size_diff > size_increase_limit:
-        raise Exception(
+        raise SanityCheckFailure(
             "Size increase ({}) exceeds limit ({})".format(
                 size_diff, size_increase_limit))
 
     if size_decrease_limit is not None and -size_diff > size_decrease_limit:
-        raise Exception(
+        raise SanityCheckFailure(
             "Size decrease ({}) exceeds limit ({})".format(
                 -size_diff, size_decrease_limit))
 
@@ -325,7 +329,8 @@ def format_exc_verbose():
 
 def check_stop_file(filename, interval):
     """
-    Returns (exists, reason, send_email).
+    Returns (exists, reason, send_email). Periodically adjusts the mtime of the
+    stop file to schedule future emails.
     """
 
     try:
@@ -334,7 +339,7 @@ def check_stop_file(filename, interval):
             reason = stop_file.read()
         last_mod = os.path.getmtime(filename)
 
-        send_email = now > last_mod  # stop file was modified in the past
+        send_email = now > last_mod and settings.ENABLE_FAIL_MAIL
         if send_email:
             future = now + settings.DNSBUILD['stop_file_email_interval']
             os.utime(settings.DNSBUILD['stop_file'], (future, future))

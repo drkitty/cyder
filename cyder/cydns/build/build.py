@@ -69,8 +69,8 @@ def check_conf(filename, logger):
 
 
 @transaction_atomic
-def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
-        verbosity=0, to_syslog=False):
+def dns_build(rebuild_all=False, dry_run=False, sanity_check=True, verbosity=0,
+        to_syslog=False):
     l = DNSBuildLogger(to_syslog=to_syslog, verbosity=verbosity)
 
     with mail_if_failure("Cyder DNS build failed", logger=l), \
@@ -145,7 +145,9 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
             config[v.pk] = ConfigFile(
                 f=open(path.join(stage_dir, config_dir, name), 'w'), name=name)
 
-        # Build zones.
+        # Build zone files.
+
+        built_count = 0
 
         for s in SOA.objects.filter(dns_enabled=True):
             if s.is_reverse:
@@ -180,7 +182,7 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
                 in_db.add(f_name)
 
             if new_serial > -1:
-                # For each view, build zone and check it.
+                # For each view, build zone file and check it.
 
                 try:
                     os.makedirs(path.join(stage_dir, f_dir))
@@ -203,8 +205,10 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
                 cache[s.pk] = CachedSOA(
                     old_serial=s.serial, new_serial=new_serial,
                     modified=s.modified)
+
+                built_count += 1
             else:
-                # For each view, check prod zone.
+                # For each view, check prod zone file.
 
                 for v in views:
                     f_name = f_name_prefix + '.' + v.name
@@ -281,3 +285,5 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True,
                     dirty=False, serial=c.new_serial)
 
         l.log_notice("Build complete")
+
+        return built_count

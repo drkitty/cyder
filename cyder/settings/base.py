@@ -524,7 +524,6 @@ DNSBUILD = {
     'stop_file': '/tmp/cyder_dns.stop',
     'stop_file_email_interval': 1800,  # 30 minutes
 
-    'last_run_file': '/tmp/cyder.last_run',
     'log_syslog': False,
 }
 

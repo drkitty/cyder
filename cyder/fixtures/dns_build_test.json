@@ -10,7 +10,6 @@
    "master_domain": null,
    "is_reverse": true,
    "modified": "2014-02-01T10:52:54",
-   "dirty": false,
    "delegated": false
   }
  },
@@ -25,7 +24,6 @@
    "master_domain": 1,
    "is_reverse": true,
    "modified": "2014-02-01T10:52:58",
-   "dirty": false,
    "delegated": false
   }
  },
@@ -40,7 +38,6 @@
    "master_domain": 2,
    "is_reverse": true,
    "modified": "2014-02-01T10:53:05",
-   "dirty": false,
    "delegated": false
   }
  },
@@ -55,7 +52,6 @@
    "master_domain": null,
    "is_reverse": false,
    "modified": "2014-02-01T10:54:05",
-   "dirty": false,
    "delegated": false
   }
  },
@@ -70,7 +66,6 @@
    "master_domain": 4,
    "is_reverse": false,
    "modified": "2014-02-01T12:16:15",
-   "dirty": false,
    "delegated": false
   }
  },
@@ -85,7 +80,6 @@
    "master_domain": null,
    "is_reverse": false,
    "modified": "2014-02-01T11:17:57",
-   "dirty": false,
    "delegated": false
   }
  },
@@ -100,7 +94,6 @@
    "master_domain": 6,
    "is_reverse": false,
    "modified": "2014-02-01T12:16:16",
-   "dirty": false,
    "delegated": false
   }
  },

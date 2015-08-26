@@ -1,19 +1,19 @@
 from cyder.core.system.models import System
-from cyder.core.task.models import Task
 from cyder.cydhcp.constants import STATIC
 from cyder.cydhcp.interface.static_intr.models import StaticInterface
 from cyder.cydhcp.network.models import Network
 from cyder.cydhcp.range.models import Range
+from cyder.cydns.address_record.models import AddressRecord
+from cyder.cydns.cname.models import CNAME
 from cyder.cydns.domain.models import Domain
+from cyder.cydns.mx.models import MX
+from cyder.cydns.nameserver.models import Nameserver
+from cyder.cydns.ptr.models import PTR
 from cyder.cydns.soa.models import SOA
 from cyder.cydns.srv.models import SRV
-from cyder.cydns.txt.models import TXT
-from cyder.cydns.ptr.models import PTR
-from cyder.cydns.mx.models import MX
-from cyder.cydns.cname.models import CNAME
-from cyder.cydns.address_record.models import AddressRecord
-from cyder.cydns.nameserver.models import Nameserver
 from cyder.cydns.tests.utils import create_zone, DNSTest
+from cyder.cydns.txt.models import TXT
+from cyder.cydns.view.models import View
 
 
 class DirtySOATests(DNSTest):
@@ -50,43 +50,31 @@ class DirtySOATests(DNSTest):
         self.ctnr.ranges.add(self.range)
 
     def test_print_soa(self):
-        self.assertNotIn(self.soa.bind_render_record(), ('', None))
-        self.assertNotIn(self.rsoa.bind_render_record(), ('', None))
+        v = View.objects.create(name='test_view')
+        self.assertNotIn(self.soa.dns_build(serial=12, view=v), ('', None))
+        self.assertNotIn(self.rsoa.dns_build(serial=12, view=v), ('', None))
 
-    def generic_dirty(self, Klass, create_data, update_data, local_soa,
-                      tdiff=1):
-        Task.dns.all().delete()  # Delete all tasks
-        local_soa.dirty = False
-        local_soa.save()
+    def generic_dirty(self, Klass, create_data, update_data, soa,
+            build_args=()):
+        SOA.objects.filter(pk=soa.pk).update(dirty=False)
+
         rec = Klass.objects.create(**create_data)
-        self.assertNotIn(rec.bind_render_record(), ('', None))
-        local_soa = SOA.objects.get(pk=local_soa.pk)
-        self.assertTrue(local_soa.dirty)
-        self.assertLessEqual(tdiff, Task.dns.count())
+        self.assertNotIn(rec.dns_build(*build_args), ('', None))
+        self.assertTrue(soa.reload().dirty)
 
         # Now try updating
-        Task.dns.all().delete()  # Delete all tasks
-        local_soa.dirty = False
-        local_soa.save()
-        local_soa = SOA.objects.get(pk=local_soa.pk)
-        self.assertFalse(local_soa.dirty)
+        SOA.objects.filter(pk=soa.pk).update(dirty=False)
+        self.assertFalse(soa.reload().dirty)
         for k, v in update_data.iteritems():
             setattr(rec, k, v)
         rec.save()
-        local_soa = SOA.objects.get(pk=local_soa.pk)
-        self.assertTrue(local_soa.dirty)
-        self.assertLessEqual(tdiff, Task.dns.count())
+        self.assertTrue(soa.reload().dirty)
 
         # Now delete
-        Task.dns.all().delete()  # Delete all tasks
-        local_soa.dirty = False
-        local_soa.save()
-        local_soa = SOA.objects.get(pk=local_soa.pk)
-        self.assertFalse(local_soa.dirty)
+        SOA.objects.filter(pk=soa.pk).update(dirty=False)
+        self.assertFalse(soa.reload().dirty)
         rec.delete()
-        local_soa = SOA.objects.get(pk=local_soa.pk)
-        self.assertTrue(local_soa.dirty)
-        self.assertLessEqual(tdiff, Task.dns.count())
+        self.assertTrue(soa.reload().dirty)
 
     def test_dirty_a(self):
         create_data = {
@@ -113,8 +101,9 @@ class DirtySOATests(DNSTest):
         update_data = {
             'label': 'asdfx1',
         }
-        self.generic_dirty(StaticInterface, create_data, update_data, self.soa,
-                           tdiff=2)
+        self.generic_dirty(
+            StaticInterface, create_data, update_data, self.soa,
+            build_args=(False,))
 
     def test_dirty_cname(self):
         create_data = {
@@ -138,7 +127,7 @@ class DirtySOATests(DNSTest):
         update_data = {
             'label': 'asdfx2',
         }
-        self.generic_dirty(PTR, create_data, update_data, local_soa=self.sr)
+        self.generic_dirty(PTR, create_data, update_data, soa=self.sr)
 
     def test_dirty_mx(self):
         create_data = {
@@ -162,12 +151,6 @@ class DirtySOATests(DNSTest):
             'label': 'asdfx4',
         }
         self.generic_dirty(Nameserver, create_data, update_data, self.soa)
-
-    def test_dirty_soa(self):
-        self.soa.dirty = False
-        self.soa.refresh = 123
-        self.soa.save()
-        self.assertTrue(self.soa.dirty)
 
     def test_dirty_srv(self):
         create_data = {
