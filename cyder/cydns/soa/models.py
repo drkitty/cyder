@@ -207,6 +207,8 @@ class SOA(BaseModel, ObjectUrlMixin):
         self.full_clean()
 
         is_new = self.pk is None
+        if not is_new:
+            db_self = self.reload()
 
         super(SOA, self).save(*args, **kwargs)
 
@@ -215,7 +217,6 @@ class SOA(BaseModel, ObjectUrlMixin):
             self.root_domain.save(commit=False)
             reassign_reverse_records(None, self.root_domain)
         else:
-            db_self = self.reload()
             if db_self.root_domain != self.root_domain:
                 from cyder.cydns.domain.models import Domain
 
