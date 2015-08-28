@@ -34,7 +34,7 @@ urlpatterns = patterns(
     url(r'^sshfp/', include('cyder.cydns.sshfp.urls')),
 
     url(r'^view/', include('cyder.cydns.view.urls')),
-    url(r'^bind/', include('cyder.cydns.cybind.urls')),
+    url(r'^bind/', include('cyder.cydns.build.urls')),
 )
 for eav in DNS_EAV_MODELS:
     urlpatterns += patterns(
