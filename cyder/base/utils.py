@@ -380,7 +380,9 @@ class mutex(object):
             # IOError: [Errno 11] Resource temporarily unavailable
             if exc_value[0] == 11:
                 with open(self.pid_file, 'r') as pid_fd:
-                    self._lock_failure(pid_fd.read())
+                    self.logger.error(
+                        'Failed to acquire lock on {0}. Process {1} currently '
+                        'has it.'.format(self.lock_file, pid))
             else:
                 raise
 
@@ -412,8 +414,3 @@ class mutex(object):
 
         self.logger.log_debug("Unlock complete")
         return True
-
-    def _lock_failure(self, pid):
-        self.logger.error(
-            'Failed to acquire lock on {0}. Process {1} currently '
-            'has it.'.format(self.lock_file, pid))

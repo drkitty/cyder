@@ -289,10 +289,10 @@ class CNAMETests(DNSTest, ModelTestMixin):
         self.ctnr.ranges.add(r)
 
         # Cyder has a catch-22 relating to nameservers: If a nameserver's name
-        # is in the same domain it serves as a nameserver for, a glue record
+        # is in the same zone it serves as a nameserver for, a glue record
         # must exist before that nameserver can be created, but the nameserver
         # must exist before the glue record can be created. Thus, we have to
-        # set the nameserver's name to something outside the domain it's a
+        # set the nameserver's name to something outside the zone it's a
         # nameserver for, add the glue record, then fix the nameserver's name.
 
         ns = Nameserver.objects.create(domain=d, server='cyderhack')

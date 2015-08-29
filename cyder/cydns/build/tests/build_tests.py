@@ -23,8 +23,6 @@ DNSBUILD = dict_merge(settings.DNSBUILD, {
     'bind_prefix': '',
     'lock_file': '/tmp/cyder_dns_test.lock',
     'pid_file': '/tmp/cyder_dns_test.pid',
-    'size_decrease_limit': 10,
-    'size_increase_limit': 500,
     'stop_file': '/tmp/cyder_dns_test.stop',
     'log_syslog': False,
 })
@@ -34,17 +32,18 @@ class DNSBuildTest(TestCase):
     fixtures = ['dns_build_test.json']
 
     def build(self, rebuild_all=False, sanity_check=True,
-            size_increase_limit=10000, size_decrease_limit=10000):
+            size_decrease_limit=10000, size_increase_limit=10000):
         try:
             os.remove(DNSBUILD['stop_file'])
         except OSError as e:
             if e.errno != errno.ENOENT:
                 raise
-        DNSBUILD['size_increase_limit'] = size_increase_limit
         DNSBUILD['size_decrease_limit'] = size_decrease_limit
+        DNSBUILD['size_increase_limit'] = size_increase_limit
         with self.settings(DNSBUILD=DNSBUILD, ENABLE_FAIL_MAIL=False):
             return dns_build(
-                rebuild_all=rebuild_all, sanity_check=sanity_check)
+                rebuild_all=rebuild_all, sanity_check=sanity_check,
+                to_syslog=False)
 
     def setUp(self):
         if not os.path.isdir(DNSBUILD['stage_dir']):
@@ -60,28 +59,28 @@ class DNSBuildTest(TestCase):
         """Test that the 'rebuild_all' argument works"""
 
         self.assertGreater(
-            self.build(rebuild_all=True, sanity_check=False),
+            self.build(rebuild_all=True, sanity_check=False)['zones_built'],
             0)
 
-        self.assertEqual(
-            self.build(sanity_check=False),
-            0)
+        # No zones should be rebuilt, and there should be no size difference.
+        build_info = self.build(sanity_check=False)
+        self.assertEqual(build_info['zones_built'], 0)
+        self.assertEqual(build_info['size_diff'], 0)
 
+        # All zones should be rebuilt.
         self.assertGreater(
-            self.build(rebuild_all=True, sanity_check=False),
+            self.build(rebuild_all=True, sanity_check=False)['zones_built'],
             0)
 
     def test_soa_dirty(self):
         """Test that the SOA.dirty flag works."""
 
-        self.assertGreater(
-            self.build(rebuild_all=True, sanity_check=False),
-            0)
+        self.build(rebuild_all=True, sanity_check=False)
 
         CNAME.objects.get(fqdn='foo.example.com').delete()
 
         self.assertEqual(
-            self.build(sanity_check=False),
+            self.build(sanity_check=False)['zones_built'],
             1)
 
         s = StaticInterface.objects.get(fqdn='www.example.com')
@@ -89,7 +88,7 @@ class DNSBuildTest(TestCase):
         s.domain.soa.save()
 
         self.assertEqual(
-            self.build(sanity_check=False),
+            self.build(sanity_check=False)['zones_built'],
             1)
 
     def test_sanity_check_increase(self):
@@ -121,7 +120,7 @@ class DNSBuildTest(TestCase):
         )
 
     def test_sanity_check_decrease(self):
-        """Test sanity check when line count decreases"""
+        """Test sanity check when size decreases"""
 
         self.build(rebuild_all=True, sanity_check=False)
 

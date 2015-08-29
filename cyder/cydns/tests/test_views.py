@@ -162,6 +162,7 @@ class CNAMEViewTests(TestCase, NoNSTests):
             'domain': self.domain.pk,
             'target': 'burp',
             'ctnr': self.ctnr.pk,
+            'ttl': 3600,
         }
 
 
@@ -181,6 +182,7 @@ class NSViewTests(TestCase, GenericViewTests):
         return {
             'domain': self.domain.pk,
             'server': 'bar2.bar',
+            'ttl': 3600,
         }
 
     def test_no_ns_in_view(self):
@@ -304,6 +306,7 @@ class PTRViewTests(TestCase, NoNSTests):
             'ip_str': '196.168.1.3',
             'description': 'yo',
             'ctnr': self.ctnr.pk,
+            'ttl': 3600,
         }
 
     def test_update_reverse_domain(self):
@@ -342,6 +345,7 @@ class SRVViewTests(TestCase, NoNSTests):
             'weight': 2222,
             'port': 222,
             'ctnr': self.ctnr.pk,
+            'ttl': 3600,
         }
 
 
@@ -363,6 +367,7 @@ class TXTViewTests(TestCase, NoNSTests):
             'domain': self.domain.pk,
             'txt_data': 'bar bar bar',
             'ctnr': self.ctnr.pk,
+            'ttl': 3600,
         }
 
 
@@ -388,4 +393,5 @@ class SSHFPViewTests(TestCase, NoNSTests):
             'fingerprint_type': 1,
             'key': '9d97e98f8af710c7e7fe703abc8f639e0ee50111',
             'ctnr': self.ctnr.pk,
+            'ttl': 3600,
         }

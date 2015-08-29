@@ -127,3 +127,7 @@ def dhcp_build(dry_run=False, sanity_check=True, verbosity=0, to_syslog=False):
             copy_tree(stage_dir, prod_dir)
 
         l.log_info('DHCP build successful')
+
+        return {
+            'size_diff': size_diff,
+        }

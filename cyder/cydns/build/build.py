@@ -147,7 +147,7 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True, verbosity=0,
 
         # Build zone files.
 
-        built_count = 0
+        zones_built = 0
 
         for s in SOA.objects.filter(dns_enabled=True):
             if s.is_reverse:
@@ -206,7 +206,7 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True, verbosity=0,
                     old_serial=s.serial, new_serial=new_serial,
                     modified=s.modified)
 
-                built_count += 1
+                zones_built += 1
             else:
                 # For each view, check prod zone file.
 
@@ -286,4 +286,7 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True, verbosity=0,
 
         l.log_notice("Build complete")
 
-        return built_count
+        return {
+            'zones_built': zones_built,
+            'size_diff': size_diff,
+        }

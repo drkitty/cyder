@@ -10,7 +10,6 @@
    "master_domain": null,
    "is_reverse": false,
    "modified": "2014-02-08T14:18:29",
-   "dirty": false,
    "delegated": false
   }
  },
@@ -25,7 +24,6 @@
    "master_domain": 1,
    "is_reverse": false,
    "modified": "2014-02-08T14:18:37",
-   "dirty": false,
    "delegated": false
   }
  },
