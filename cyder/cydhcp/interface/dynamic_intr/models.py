@@ -61,8 +61,7 @@ class DynamicInterface(BaseModel, ObjectUrlMixin, ExpirableMixin):
             ('System', 'system', self.system),
             ('Mac', 'mac', self),
             ('Range', 'range__start_lower', self.range),
-            ('Workgroup', 'workgroup', self.workgroup),
-            ('Last seen', 'last_seen', self.last_seen)]
+            ('Workgroup', 'workgroup', self.workgroup)]
         return data
 
     @staticmethod
@@ -113,6 +112,12 @@ class DynamicInterface(BaseModel, ObjectUrlMixin, ExpirableMixin):
             if siblings.exists():
                 raise ValidationError(
                     "MAC address must be unique in this interface's range")
+
+        if (self.workgroup.pk != DEFAULT_WORKGROUP
+                and self.ctnr not in self.workgroup.ctnr_set.all()):
+            raise ValidationError("Workgroup is not in this dynamic "
+                                  "interface's container.")
+
         validate_system_dynamic_ctnr(self.system, self)
 
     @transaction_atomic

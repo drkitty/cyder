@@ -12,8 +12,7 @@ class Tablefier:
                  users=False, custom=None, update=True, detail_view=False,
                  excluded=[]):
         if users:
-            from cyder.core.cyuser.models import UserProfile
-            objects = UserProfile.objects.filter(user__in=objects)
+            objects = [u.profile for u in objects]
 
         self.objects = objects
         self.request = request
@@ -86,7 +85,7 @@ class Tablefier:
             for col in self.extra_cols:
                 headers.append([col['header'], col['sort_field']])
 
-        if not self.detail_view:
+        if not self.detail_view and self.update:
             headers.append(['Actions', None])
 
         if (hasattr(self.objects, 'object_list') and
@@ -206,7 +205,7 @@ class Tablefier:
             if self.show_ctnr:
                 row_data.append(self.build_data(obj, obj.ctnr))
 
-            if not self.detail_view:
+            if not self.detail_view and self.update:
                 row_data.append(self.build_update_field(obj))
 
             objs.append(obj)
