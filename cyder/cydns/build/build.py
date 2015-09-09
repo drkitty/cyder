@@ -24,7 +24,7 @@ from cyder.cydns.view.models import View
 CONFIG_ZONE = """\
 zone "{zone_name}" IN {{
     type master;
-    file "{f_name}";
+    file "{filename}";
 }};
 
 """
@@ -45,7 +45,7 @@ def get_serial(filename):
 CachedSOA = namedtuple('CachedSOA', ('old_serial', 'new_serial', 'modified'))
 
 
-ConfigFile = namedtuple('ConfigFile', ('f', 'name'))
+ConfigFile = namedtuple('ConfigFile', ('fd', 'name'))
 
 
 class DNSBuildLogger(UnixLogger):
@@ -124,9 +124,10 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True, verbosity=0,
         # Open config files.
 
         for v in views:
-            name = 'master.' + v.name
+            config_name = 'master.' + v.name
             config[v.pk] = ConfigFile(
-                f=open(path.join(stage_dir, config_dir, name), 'w'), name=name)
+                fd=open(path.join(stage_dir, config_dir, config_name), 'w'),
+                name=config_name)
 
         # Build zone files.
 
@@ -138,52 +139,52 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True, verbosity=0,
                     reversed(s.root_domain.name.split('.')),
                     0, 2))
 
-                f_dir = path.join(
+                fdir = path.join(
                     rev_dir,
                     '.'.join(reversed(last_two))
                 )
             else:
-                f_dir = '/'.join(reversed(s.root_domain.name.split('.')))
+                fdir = '/'.join(reversed(s.root_domain.name.split('.')))
 
             new_serial = -1
 
-            f_name_prefix = path.join(f_dir, s.root_domain.name)
+            fprefix = path.join(fdir, s.root_domain.name)
 
             for v in views:
-                f_name = f_name_prefix + '.' + v.name
+                fname = fprefix + '.' + v.name
 
-                config[v.pk].f.write(CONFIG_ZONE.format(
+                config[v.pk].fd.write(CONFIG_ZONE.format(
                     zone_name=s.root_domain.name,
-                    f_name=path.join(bind_dir, f_name)))
+                    filename=path.join(bind_dir, fname)))
 
-                file_serial = get_serial(path.join(prod_dir, f_name))
+                file_serial = get_serial(path.join(prod_dir, fname))
                 if s.dirty or file_serial != s.serial or rebuild_all:
                     new_serial = max(
                         new_serial - 1, s.serial, time_serial - 1,
                         file_serial) + 1
 
-                in_db.add(f_name)
+                in_db.add(fname)
 
             if new_serial > -1:
                 # For each view, build zone file and check it.
 
                 try:
-                    os.makedirs(path.join(stage_dir, f_dir))
+                    os.makedirs(path.join(stage_dir, fdir))
                 except OSError as e:
                     if e.errno != errno.EEXIST:
                         raise
 
                 for v in views:
-                    f_name = f_name_prefix + '.' + v.name
-                    l.log_debug("Building " + f_name)
+                    fname = fprefix + '.' + v.name
+                    l.log_debug("Building " + fname)
 
-                    f_path = path.join(stage_dir, f_name)
+                    fpath = path.join(stage_dir, fname)
 
-                    with open(f_path, 'wb') as f:
-                        f.write(s.dns_build(view=v, serial=new_serial) + '\n')
-                    check_zone(s.root_domain.name, f_path, logger=l)
+                    with open(fpath, 'wb') as fd:
+                        fd.write(s.dns_build(view=v, serial=new_serial) + '\n')
+                    check_zone(s.root_domain.name, fpath, logger=l)
 
-                    built.add(f_name)
+                    built.add(fname)
 
                 cache[s.pk] = CachedSOA(
                     old_serial=s.serial, new_serial=new_serial,
@@ -194,16 +195,16 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True, verbosity=0,
                 # For each view, check prod zone file.
 
                 for v in views:
-                    f_name = f_name_prefix + '.' + v.name
+                    fname = fprefix + '.' + v.name
                     check_zone(
-                        s.root_domain.name, path.join(prod_dir, f_name),
+                        s.root_domain.name, path.join(prod_dir, fname),
                         logger=l)
 
 
         # Close config files.
 
-        for f, name in config.itervalues():
-            f.close()
+        for fd, name in config.itervalues():
+            fd.close()
             check_conf(path.join(stage_dir, config_dir, name), l)
 
         # Get size difference between prod and stage.
