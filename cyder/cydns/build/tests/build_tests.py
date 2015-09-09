@@ -43,7 +43,7 @@ class DNSBuildTest(TestCase):
         with self.settings(DNSBUILD=DNSBUILD, ENABLE_FAIL_MAIL=False):
             return dns_build(
                 rebuild_all=rebuild_all, sanity_check=sanity_check,
-                to_syslog=False)
+                log_syslog=False)
 
     def setUp(self):
         if not os.path.isdir(DNSBUILD['stage_dir']):

@@ -45,7 +45,7 @@ class DHCPBuildTest(TestCase):
         DHCPBUILD['size_decrease_limit'] = size_decrease_limit
         DHCPBUILD['size_increase_limit'] = size_increase_limit
         with self.settings(DHCPBUILD=DHCPBUILD, ENABLE_FAIL_MAIL=False):
-            return dhcp_build(sanity_check=sanity_check, to_syslog=False)
+            return dhcp_build(sanity_check=sanity_check, log_syslog=False)
 
     def setUp(self):
         if not os.path.isdir(DHCPBUILD['stage_dir']):
