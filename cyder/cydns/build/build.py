@@ -53,7 +53,7 @@ class DNSBuildLogger(UnixLogger):
         if set_stop_file:
             with open(settings.DNSBUILD['stop_file'], 'w') as f:
                 f.write(msg)
-        super(DNSBuildLogger, self).error(msg, set_stop_file=set_stop_file)
+        super(DNSBuildLogger, self).error(msg)
 
 
 def check_zone(zonename, filename, logger):
@@ -70,8 +70,8 @@ def check_conf(filename, logger):
 
 @transaction_atomic
 def dns_build(rebuild_all=False, dry_run=False, sanity_check=True, verbosity=0,
-        to_syslog=False):
-    l = DNSBuildLogger(to_syslog=to_syslog, verbosity=verbosity)
+        log_syslog=False):
+    l = DNSBuildLogger(to_syslog=log_syslog, verbosity=verbosity)
 
     with mail_if_failure("Cyder DNS build failed", logger=l), \
             mutex(

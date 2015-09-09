@@ -36,8 +36,9 @@ def check_syntax(ip_type, filepath, logger):
 
 
 @transaction_atomic
-def dhcp_build(dry_run=False, sanity_check=True, verbosity=0, to_syslog=False):
-    l = DHCPBuildLogger(to_syslog=to_syslog, verbosity=verbosity)
+def dhcp_build(dry_run=False, sanity_check=True, verbosity=0,
+        log_syslog=False):
+    l = DHCPBuildLogger(to_syslog=log_syslog, verbosity=verbosity)
 
     with mail_if_failure("Cyder DHCP build failed", logger=l), \
             mutex(

@@ -1,6 +1,7 @@
 import syslog
 from optparse import make_option
 
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 from cyder.cydhcp.build.build import dhcp_build
@@ -16,11 +17,11 @@ class Command(BaseCommand):
                     help="Don't sync to production directory."),
         ### logging/debug options ###
         make_option('-l', '--syslog',
-                    dest='to_syslog',
+                    dest='log_syslog',
                     action='store_true',
                     help="Log to syslog."),
         make_option('-L', '--no-syslog',
-                    dest='to_syslog',
+                    dest='log_syslog',
                     action='store_false',
                     help="Do not log to syslog."),
         ### miscellaneous ###
@@ -32,9 +33,15 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
+        if options['log_syslog'] is None:
+            options['log_syslog'] = settings.DHCPBUILD['log_syslog']
+
+        if options['log_syslog']:
+            syslog.openlog('dhcp_build', facility=syslog.LOG_LOCAL6)
+
         dhcp_build(
             dry_run=options['dry_run'],
             sanity_check=options['sanity_check'],
             verbosity=int(options['verbosity']),
-            to_syslog=options['to_syslog'],
+            log_syslog=options['log_syslog'],
         )

@@ -1,6 +1,7 @@
 import syslog
 from optparse import make_option
 
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 from cyder.cydns.build.build import dns_build
@@ -16,13 +17,12 @@ class Command(BaseCommand):
                     help="Don't sync to production directory."),
         ### logging/debug options ###
         make_option('-l', '--syslog',
-                    dest='to_syslog',
+                    dest='log_syslog',
                     action='store_true',
                     help="Log to syslog."),
         make_option('-L', '--no-syslog',
-                    dest='to_syslog',
+                    dest='log_syslog',
                     action='store_false',
-                    default=False,
                     help="Do not log to syslog."),
         ### miscellaneous ###
         make_option('-a', '--rebuild-all',
@@ -38,14 +38,16 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
-        if options['to_syslog']:
-            syslog.openlog('dhcp_build', facility=syslog.LOG_LOCAL6)
-            builder_opts['to_syslog'] = True
+        if options['log_syslog'] is None:
+            options['log_syslog'] = settings.DNSBUILD['log_syslog']
+
+        if options['log_syslog']:
+            syslog.openlog('dns_build', facility=syslog.LOG_LOCAL6)
 
         dns_build(
             rebuild_all=options['rebuild_all'],
             dry_run=options['dry_run'],
             sanity_check=options['sanity_check'],
             verbosity=int(options['verbosity']),
-            to_syslog=options['to_syslog'],
+            log_syslog=options['log_syslog'],
         )
