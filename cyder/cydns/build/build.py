@@ -153,9 +153,11 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True, verbosity=0,
             for v in views:
                 fname = fprefix + '.' + v.name
 
-                config[v.pk].fd.write(CONFIG_ZONE.format(
-                    zone_name=s.root_domain.name,
-                    filename=path.join(bind_dir, fname)))
+                if (s.root_domain.name, v.name) not in \
+                        settings.ZONES_WITH_NO_CONFIG:
+                    config[v.pk].fd.write(CONFIG_ZONE.format(
+                        zone_name=s.root_domain.name,
+                        filename=path.join(bind_dir, fname)))
 
                 file_serial = get_serial(path.join(prod_dir, fname))
                 if s.dirty or file_serial != s.serial or rebuild_all:
