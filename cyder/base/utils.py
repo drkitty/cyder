@@ -327,12 +327,7 @@ def format_exc_verbose():
     return s
 
 
-def check_stop_file(filename, interval):
-    """
-    Returns (exists, reason, send_email). Periodically adjusts the mtime of the
-    stop file to schedule future emails.
-    """
-
+def check_stop_file(action_name, filename, interval):
     try:
         with open(filename) as stop_file:
             now = time.time()
@@ -344,7 +339,26 @@ def check_stop_file(filename, interval):
             future = now + settings.DNSBUILD['stop_file_email_interval']
             os.utime(settings.DNSBUILD['stop_file'], (future, future))
 
-        return True, reason, send_email
+        if send_email:
+            logger.log_debug("Sending email about stop file")
+            fail_mail(
+                "{} skipped because the stop file ({}) "
+                "exists.\nReason:\n".format(
+                    action_name, settings.DNSBUILD['stop_file']
+                ) + stop_reason,
+                subject="Cyder DNS build skipped because stop file exists")
+        else:
+            logger.log_debug("Not sending email about stop file")
+
+        with dont_mail_if_failure():
+            logger.error(
+                "The stop file ({}) exists. Skipping {}{}.\n"
+                "Reason:\n".format(
+                    settings.DNSBUILD['stop_file'],
+                    action_name,
+                    " and sending email" if send_email else ""
+                ) + stop_reason,
+                set_stop_file=False)
     except IOError as e:
         if e.errno != errno.ENOENT:  # "No such file or directory"
             raise

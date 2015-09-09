@@ -412,14 +412,15 @@ class Range(BaseModel, ViewMixin, ObjectUrlMixin):
                     d1 = start[3] if (a, b, c) == tuple(start[:3]) else 0
                     d2 = end[3] if (a, b, c) == tuple(end[:3]) else 255
 
-                    name = '$GENERATE {}-{} {}-{}-{}-$.{}.'.format(
-                        d1, d2, a, b, c, self.domain)
+                    name = '$GENERATE {}-{} '.format(d1, d2)
 
                     if reverse:
-                        rdata = "$.{2}.{1}.{0}.in-addr.arpa.".format(a, b, c)
+                        name += '$.{}.{}.{}.in-addr.arpa.'.format(c, b, a)
+                        rdata = '{}-{}-{}-$.{}.'.format(a, b, c, self.domain)
                         type_ = 'PTR'
                     else:
-                        rdata = "{0}.{1}.{2}.$".format(a, b, c)
+                        name += '{}-{}-{}-$.{}.'.format(a, b, c, self.domain)
+                        rdata = '{}.{}.{}.$'.format(a, b, c)
                         type_ = 'A'
 
                     ss.append(render_dns_record(

@@ -110,6 +110,8 @@ class SOA(BaseModel, ObjectUrlMixin):
             ')\n'  # blank line after
         ]
 
+        ranges = set()
+
         for d in self.domain_set.all():
             records = chain(
                 d.nameserver_set.filter(views=view),
@@ -125,18 +127,23 @@ class SOA(BaseModel, ObjectUrlMixin):
                 ss.append(rec.dns_build())
 
             if self.is_reverse:
-                reversible_records = chain(
-                    d.range_set.filter(views=view),
-                    d.reverse_staticintr_set.filter(views=view),
-                )
+                reversible_records = d.reverse_staticintr_set.filter(
+                    views=view, dns_enabled=True)
+                if d.ip_type == '4':
+                    for rng in d.get_related_ranges().filter(views=view):
+                        ranges.add(rng)
             else:
-                reversible_records = chain(
-                    d.range_set.filter(views=view),
-                    d.staticinterface_set.filter(views=view),
-                )
+                reversible_records = d.staticinterface_set.filter(
+                    views=view, dns_enabled=True)
+                for rng in d.range_set.filter(views=view):
+                    ranges.add(rng)
 
             for rec in reversible_records:
                 ss.append(rec.dns_build(reverse=self.is_reverse))
+
+        for rng in ranges:
+            ss.append(rng.dns_build(reverse=self.is_reverse))
+
 
         return '\n'.join(ss)
 

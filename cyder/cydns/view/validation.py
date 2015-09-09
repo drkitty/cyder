@@ -14,7 +14,7 @@ def check_no_ns_soa_condition(domain, view=None):
     if domain.soa:
         fail = False
         root_domain = domain.soa.root_domain
-        if root_domain and not root_domain.nameserver_set.exists():
+        if not root_domain.nameserver_set.exists():
             fail = True
         elif (view and
               not root_domain.nameserver_set.filter(views=view).exists()):

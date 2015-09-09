@@ -77,28 +77,11 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True, verbosity=0,
             mutex(
                 lock_file=settings.DNSBUILD['lock_file'],
                 pid_file=settings.DNSBUILD['pid_file'], logger=l):
-        stop_file_exists, stop_reason, send_email = check_stop_file(
-            settings.DNSBUILD['stop_file'],
-            settings.DNSBUILD['stop_file_email_interval'])
-        if stop_file_exists:
-            if send_email:
-                l.log_debug("Sending email about stop file")
-                fail_mail(
-                    "Cyder DNS build skipped because the stop file ({}) "
-                    "exists.\nReason:\n".format(
-                        settings.DNSBUILD['stop_file']) + stop_reason,
-                    subject="Cyder DNS build skipped because stop file exists")
-            else:
-                l.log_debug("Not sending email about stop file")
 
-            with dont_mail_if_failure():
-                l.error(
-                    "The stop file ({}) exists. Skipping build{}.\n"
-                    "Reason:\n".format(
-                        settings.DNSBUILD['stop_file'],
-                        " and sending email" if send_email else ""
-                    ) + stop_reason,
-                    set_stop_file=False)
+        check_stop_file(
+            "Cyder DNS build",
+            filename=settings.DNSBUILD['stop_file'],
+            interval=settings.DNSBUILD['stop_file_email_interval'])
 
         if rebuild_all:
             l.log_notice("Building all zones...")
