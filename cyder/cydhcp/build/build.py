@@ -5,21 +5,12 @@ from os import path
 from django.conf import settings
 
 from cyder.base.utils import (
-    build_sanity_check, check_stop_file, copy_tree, mutex, remove_dir_contents,
-    run_command, transaction_atomic, UnixLogger)
-from cyder.core.utils import dont_mail_if_failure, mail_if_failure
+    build_sanity_check, check_stop_file, copy_tree, handle_failure, mutex,
+    remove_dir_contents, run_command, transaction_atomic, UnixLogger)
 from cyder.core.ctnr.models import Ctnr
 from cyder.cydhcp.network.models import Network
 from cyder.cydhcp.vrf.models import Vrf
 from cyder.cydhcp.workgroup.models import Workgroup
-
-
-class DHCPBuildLogger(UnixLogger):
-    def error(self, msg, set_stop_file=True):
-        if set_stop_file:
-            with open(settings.DNSBUILD['stop_file'], 'w') as f:
-                f.write(msg)
-        super(DHCPBuildLogger, self).error(msg, set_stop_file=set_stop_file)
 
 
 def check_syntax(ip_type, filepath, logger):
@@ -38,14 +29,16 @@ def check_syntax(ip_type, filepath, logger):
 @transaction_atomic
 def dhcp_build(dry_run=False, sanity_check=True, verbosity=0,
         log_syslog=False):
-    l = DHCPBuildLogger(to_syslog=log_syslog, verbosity=verbosity)
+    l = UnixLogger(to_syslog=log_syslog, verbosity=verbosity)
 
-    with mail_if_failure("Cyder DHCP build failed", logger=l), \
+    with handle_failure(
+                msg="Cyder DHCP build failed", logger=l,
+                stop_file=settings.DHCPBUILD['stop_file']), \
             mutex(
                 lock_file=settings.DHCPBUILD['lock_file'],
                 pid_file=settings.DHCPBUILD['pid_file'], logger=l):
         check_stop_file(
-            "Cyder DHCP build",
+            action_name="Cyder DHCP build", logger=l,
             filename=settings.DHCPBUILD['stop_file'],
             interval=settings.DHCPBUILD['stop_file_email_interval'])
 

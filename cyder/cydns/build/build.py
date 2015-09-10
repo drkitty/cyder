@@ -13,9 +13,8 @@ from time import mktime
 from django.conf import settings
 
 from cyder.base.utils import (
-    build_sanity_check, check_stop_file, copy_tree, mutex, remove_dir_contents,
-    run_command, transaction_atomic, UnixLogger)
-from cyder.core.utils import dont_mail_if_failure, fail_mail, mail_if_failure
+    build_sanity_check, check_stop_file, copy_tree, handle_failure, mutex,
+    remove_dir_contents, run_command, transaction_atomic, UnixLogger)
 from cyder.cydns.build.models import BuildTime
 from cyder.cydns.soa.models import SOA
 from cyder.cydns.view.models import View
@@ -48,14 +47,6 @@ CachedSOA = namedtuple('CachedSOA', ('old_serial', 'new_serial', 'modified'))
 ConfigFile = namedtuple('ConfigFile', ('fd', 'name'))
 
 
-class DNSBuildLogger(UnixLogger):
-    def error(self, msg, set_stop_file=True):
-        if set_stop_file:
-            with open(settings.DNSBUILD['stop_file'], 'w') as f:
-                f.write(msg)
-        super(DNSBuildLogger, self).error(msg)
-
-
 def check_zone(zonename, filename, logger):
     run_command(
         settings.DNSBUILD['named_checkzone'] + ' ' + zonename + ' ' + filename,
@@ -71,15 +62,16 @@ def check_conf(filename, logger):
 @transaction_atomic
 def dns_build(rebuild_all=False, dry_run=False, sanity_check=True, verbosity=0,
         log_syslog=False):
-    l = DNSBuildLogger(to_syslog=log_syslog, verbosity=verbosity)
+    l = UnixLogger(to_syslog=log_syslog, verbosity=verbosity)
 
-    with mail_if_failure("Cyder DNS build failed", logger=l), \
+    with handle_failure(
+                msg="Cyder DNS build failed", logger=l,
+                stop_file=settings.DNSBUILD['stop_file']), \
             mutex(
                 lock_file=settings.DNSBUILD['lock_file'],
                 pid_file=settings.DNSBUILD['pid_file'], logger=l):
-
         check_stop_file(
-            "Cyder DNS build",
+            action_name="Cyder DNS build", logger=l,
             filename=settings.DNSBUILD['stop_file'],
             interval=settings.DNSBUILD['stop_file_email_interval'])
 

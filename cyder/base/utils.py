@@ -5,10 +5,14 @@ import operator
 import os
 import shlex
 import shutil
+import smtplib
 import subprocess
 import syslog
 import time
 from copy import copy
+from datetime import timedelta
+from email.mime.text import MIMEText
+from functools import wraps
 from os import path
 from sys import stderr
 
@@ -327,37 +331,43 @@ def format_exc_verbose():
     return s
 
 
-def check_stop_file(action_name, filename, interval):
+def check_stop_file(action_name, filename, interval, logger):
     try:
         with open(filename) as stop_file:
             now = time.time()
-            reason = stop_file.read()
+            reason = []
+            for line in stop_file.readlines():
+                reason.append('    ' + line)
+            reason = ''.join(reason)
         last_mod = os.path.getmtime(filename)
 
         send_email = now > last_mod and settings.ENABLE_FAIL_MAIL
         if send_email:
-            future = now + settings.DNSBUILD['stop_file_email_interval']
-            os.utime(settings.DNSBUILD['stop_file'], (future, future))
+            future = now + interval
+            os.utime(filename, (future, future))
 
         if send_email:
             logger.log_debug("Sending email about stop file")
             fail_mail(
                 "{} skipped because the stop file ({}) "
-                "exists.\nReason:\n".format(
-                    action_name, settings.DNSBUILD['stop_file']
-                ) + stop_reason,
-                subject="Cyder DNS build skipped because stop file exists")
+                "exists.\n"
+                "Reason:\n"
+                "{}\n"
+                "Another email will be sent in {} if the stop file is not "
+                "removed.\n".format(
+                    action_name, filename, reason,
+                    timedelta(seconds=interval)),
+                subject="{} skipped because stop file exists".format(
+                    action_name))
         else:
             logger.log_debug("Not sending email about stop file")
 
-        with dont_mail_if_failure():
+        with dont_handle_failure():
             logger.error(
-                "The stop file ({}) exists. Skipping {}{}.\n"
+                "The stop file ({}) exists.\n"
                 "Reason:\n".format(
-                    settings.DNSBUILD['stop_file'],
-                    action_name,
-                    " and sending email" if send_email else ""
-                ) + stop_reason,
+                    filename,
+                ) + reason,
                 set_stop_file=False)
     except IOError as e:
         if e.errno != errno.ENOENT:  # "No such file or directory"
@@ -389,10 +399,10 @@ class mutex(object):
 
         try:
             fcntl.flock(self.lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except IOError as exc_value:
+        except IOError as e:
             self.lock_fd.close()
-            # IOError: [Errno 11] Resource temporarily unavailable
-            if exc_value[0] == 11:
+            if e.errno == errno.EAGAIN:
+                # Resource temporarily unavailable
                 with open(self.pid_file, 'r') as pid_fd:
                     self.logger.error(
                         'Failed to acquire lock on {0}. Process {1} currently '
@@ -405,9 +415,9 @@ class mutex(object):
         try:
             with open(self.pid_file, 'w') as pid_fd:
                 pid_fd.write(unicode(os.getpid()))
-        except IOError as exc_value:
-            # IOError: [Errno 2] No such file or directory
-            if exc_value[0] == 2:
+        except IOError as e:
+            if e.errno == errno.ENOENT:
+                # No such file or directory
                 self.logger.error(
                     "Failed to acquire lock on {0}, but the process that has "
                     "it hasn't written the PID file ({1}) yet.".format(
@@ -428,3 +438,71 @@ class mutex(object):
 
         self.logger.log_debug("Unlock complete")
         return True
+
+
+def fail_mail(content, subject,
+              from_=settings.FAIL_EMAIL_FROM,
+              to=settings.FAIL_EMAIL_TO):
+    """Send email about a failure."""
+    msg = MIMEText(content)
+    msg['Subject'] = subject
+    msg['From'] = from_
+    msg['To'] = ', '.join(to)
+    s = smtplib.SMTP(settings.FAIL_EMAIL_SERVER, 587)
+    s.starttls()
+    s.login(settings.FAIL_EMAIL_FROM, settings.FAIL_EMAIL_PASSWORD)
+    s.sendmail(from_, to, msg.as_string())
+    s.quit()
+
+
+class DontHandle(Exception):
+    def __init__(self, exc_type, exc_value, traceback):
+        self.exc_type = exc_type
+        self.exc_value = exc_value
+        self.traceback = traceback
+
+    def reraise(self):
+        raise self.exc_type, self.exc_value, self.traceback
+
+
+class handle_failure(object):
+    def __init__(self, msg, stop_file, logger):
+        self.msg = msg
+        self.stop_file = stop_file
+        self.logger = logger
+
+    def __call__(self, func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            with self:
+                func(*args, **kwargs)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type in (None, KeyboardInterrupt):
+            return
+        elif exc_type is DontHandle:
+            exc_value.reraise()
+
+        error = self.msg + '\n' + format_exc_verbose()
+        try:
+            self.logger.error(error)
+        except:
+            pass
+        self.logger.log_notice('Writing to stop file...')
+        with open(self.stop_file, 'w') as fd:
+            fd.write(error)
+        if not settings.TESTING:
+            self.logger.log_notice('Sending email...')
+            fail_mail(error, subject=self.msg)
+
+
+class dont_handle_failure(object):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type is not None:
+            raise DontHandle(exc_type, exc_value, traceback)
