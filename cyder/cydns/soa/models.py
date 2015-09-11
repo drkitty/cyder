@@ -90,15 +90,23 @@ class SOA(BaseModel, ObjectUrlMixin):
     class Meta:
         app_label = 'cyder'
         db_table = 'soa'
-        # We are using the description field here to stop the same SOA from
-        # being assigned to multiple zones. See the documentation in the
-        # Domain models.py file for more info.
 
     @property
     def is_reverse(self):
         return self.root_domain.is_reverse
 
     def dns_build(self, view, serial):
+        from cyder.cydhcp.interface.static_intr.models import StaticInterface
+        from cyder.cydhcp.range.models import Range
+        from cyder.cydns.address_record.models import AddressRecord
+        from cyder.cydns.cname.models import CNAME
+        from cyder.cydns.mx.models import MX
+        from cyder.cydns.nameserver.models import Nameserver
+        from cyder.cydns.ptr.models import PTR
+        from cyder.cydns.srv.models import SRV
+        from cyder.cydns.sshfp.models import SSHFP
+        from cyder.cydns.txt.models import TXT
+
         ss = [
             '{}.  {}  IN  SOA  {}. {}. (\n'.format(
                 self.root_domain.name, self.ttl, self.primary, self.contact) +
@@ -110,40 +118,55 @@ class SOA(BaseModel, ObjectUrlMixin):
             ')\n'  # blank line after
         ]
 
-        ranges = set()
+        normal_records = chain(
+            AddressRecord.objects.filter(
+                domain__soa=self, views=view).order_by('ip_type', 'fqdn'),
 
-        for d in self.domain_set.all():
-            records = chain(
-                d.nameserver_set.filter(views=view),
-                d.addressrecord_set.filter(views=view),
-                d.cname_set.filter(views=view),
-                d.mx_set.filter(views=view),
-                d.srv_set.filter(views=view),
-                d.sshfp_set.filter(views=view),
-                d.txt_set.filter(views=view),
-                d.reverse_ptr_set.filter(views=view),
-            )
-            for rec in records:
-                ss.append(rec.dns_build())
+            CNAME.objects.filter(
+                domain__soa=self, views=view).order_by('fqdn'),
 
-            if self.is_reverse:
-                reversible_records = d.reverse_staticintr_set.filter(
-                    views=view, dns_enabled=True)
-                if d.ip_type == '4':
-                    for rng in d.get_related_ranges().filter(views=view):
-                        ranges.add(rng)
-            else:
-                reversible_records = d.staticinterface_set.filter(
-                    views=view, dns_enabled=True)
-                for rng in d.range_set.filter(views=view):
-                    ranges.add(rng)
+            MX.objects.filter(domain__soa=self, views=view).order_by('fqdn'),
 
-            for rec in reversible_records:
-                ss.append(rec.dns_build(reverse=self.is_reverse))
+            Nameserver.objects.filter(
+                domain__soa=self, views=view).order_by('domain'),
+
+            PTR.objects.filter(
+                reverse_domain__soa=self, views=view).order_by('fqdn'),
+
+            SRV.objects.filter(domain__soa=self, views=view).order_by('fqdn'),
+
+            SSHFP.objects.filter(
+                domain__soa=self, views=view).order_by('fqdn'),
+
+            TXT.objects.filter(domain__soa=self, views=view).order_by('fqdn'),
+        )
+
+        if self.is_reverse:
+            reversible_records = StaticInterface.objects.filter(
+                domain__soa=self, views=view, dns_enabled=True
+            ).order_by('fqdn')
+
+            ranges = chain(*[
+                d.get_related_ranges().filter(views=view).order_by(
+                    'start_upper', 'start_lower')
+                for d in self.domain_set.all() if d.ip_type == '4'
+            ])
+        else:
+            reversible_records = StaticInterface.objects.filter(
+                domain__soa=self, views=view, dns_enabled=True
+            ).order_by('fqdn')
+            ranges = Range.objects.filter(
+                domain__soa=self, views=view
+            ).order_by('start_upper', 'start_lower')
+
+        for rec in reversible_records:
+            ss.append(rec.dns_build(reverse=self.is_reverse))
+
+        for rec in normal_records:
+            ss.append(rec.dns_build())
 
         for rng in ranges:
             ss.append(rng.dns_build(reverse=self.is_reverse))
-
 
         return '\n'.join(ss)
 
