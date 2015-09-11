@@ -347,7 +347,7 @@ def check_stop_file(action_name, filename, interval, logger):
             os.utime(filename, (future, future))
 
         if send_email:
-            logger.log_debug("Sending email about stop file")
+            logger.log_notice("Sending email about stop file")
             fail_mail(
                 "{} skipped because the stop file ({}) "
                 "exists.\n"
