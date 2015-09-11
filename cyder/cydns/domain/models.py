@@ -270,8 +270,8 @@ class Domain(BaseModel, ObjectUrlMixin):
         if not self.is_reverse:
             return None
 
-        if self.ip_type == '6':
-            raise NotImplemented
+        if self.ip_type != '4':
+            raise Expection("Not implemented")
 
         from cyder.cydhcp.range.models import Range
         ip_str = self.name.rsplit('.', 2)[0]
