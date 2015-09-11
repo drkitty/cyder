@@ -506,3 +506,11 @@ class dont_handle_failure(object):
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is not None:
             raise DontHandle(exc_type, exc_value, traceback)
+
+
+class null_context_manager(object):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass

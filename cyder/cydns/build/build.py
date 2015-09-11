@@ -14,7 +14,8 @@ from django.conf import settings
 
 from cyder.base.utils import (
     build_sanity_check, check_stop_file, copy_tree, handle_failure, mutex,
-    remove_dir_contents, run_command, transaction_atomic, UnixLogger)
+    null_context_manager, remove_dir_contents, run_command, transaction_atomic,
+    UnixLogger)
 from cyder.cydns.build.models import BuildTime
 from cyder.cydns.soa.models import SOA
 from cyder.cydns.view.models import View
@@ -64,16 +65,23 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True, verbosity=0,
         log_syslog=False):
     l = UnixLogger(to_syslog=log_syslog, verbosity=verbosity)
 
-    with handle_failure(
-                msg="Cyder DNS build failed", logger=l,
-                stop_file=settings.DNSBUILD['stop_file']), \
-            mutex(
-                lock_file=settings.DNSBUILD['lock_file'],
-                pid_file=settings.DNSBUILD['pid_file'], logger=l):
-        check_stop_file(
-            action_name="Cyder DNS build", logger=l,
-            filename=settings.DNSBUILD['stop_file'],
-            interval=settings.DNSBUILD['stop_file_email_interval'])
+    if dry_run:
+        # Don't create a stop file or send failure emails.
+        failure_handler = null_context_manager()
+    else:
+        failure_handler = handle_failure(
+            msg="Cyder DNS build failed", logger=l,
+            stop_file=settings.DNSBUILD['stop_file'])
+
+    with failure_handler, mutex(
+            lock_file=settings.DNSBUILD['lock_file'],
+            pid_file=settings.DNSBUILD['pid_file'], logger=l):
+
+        if not dry_run:
+            check_stop_file(
+                action_name="Cyder DNS build", logger=l,
+                filename=settings.DNSBUILD['stop_file'],
+                interval=settings.DNSBUILD['stop_file_email_interval'])
 
         if rebuild_all:
             l.log_notice("Building all zones...")

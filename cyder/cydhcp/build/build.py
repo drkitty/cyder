@@ -6,7 +6,8 @@ from django.conf import settings
 
 from cyder.base.utils import (
     build_sanity_check, check_stop_file, copy_tree, handle_failure, mutex,
-    remove_dir_contents, run_command, transaction_atomic, UnixLogger)
+    null_context_manager, remove_dir_contents, run_command, transaction_atomic,
+    UnixLogger)
 from cyder.core.ctnr.models import Ctnr
 from cyder.cydhcp.network.models import Network
 from cyder.cydhcp.vrf.models import Vrf
@@ -31,16 +32,23 @@ def dhcp_build(dry_run=False, sanity_check=True, verbosity=0,
         log_syslog=False):
     l = UnixLogger(to_syslog=log_syslog, verbosity=verbosity)
 
-    with handle_failure(
-                msg="Cyder DHCP build failed", logger=l,
-                stop_file=settings.DHCPBUILD['stop_file']), \
-            mutex(
-                lock_file=settings.DHCPBUILD['lock_file'],
-                pid_file=settings.DHCPBUILD['pid_file'], logger=l):
-        check_stop_file(
-            action_name="Cyder DHCP build", logger=l,
-            filename=settings.DHCPBUILD['stop_file'],
-            interval=settings.DHCPBUILD['stop_file_email_interval'])
+    if dry_run:
+        # Don't create a stop file or send failure emails.
+        failure_handler = null_context_manager()
+    else:
+        failure_handler = handle_failure(
+            msg="Cyder DHCP build failed", logger=l,
+            stop_file=settings.DHCPBUILD['stop_file'])
+
+    with failure_handler, mutex(
+            lock_file=settings.DHCPBUILD['lock_file'],
+            pid_file=settings.DHCPBUILD['pid_file'], logger=l):
+
+        if not dry_run:
+            check_stop_file(
+                action_name="Cyder DHCP build", logger=l,
+                filename=settings.DHCPBUILD['stop_file'],
+                interval=settings.DHCPBUILD['stop_file_email_interval'])
 
         stage_dir = settings.DHCPBUILD['stage_dir']
         prod_dir = settings.DHCPBUILD['prod_dir']
@@ -51,7 +59,8 @@ def dhcp_build(dry_run=False, sanity_check=True, verbosity=0,
         copy_tree(prod_dir, stage_dir)
 
         for ip_type, files in (('4', files_v4), ('6', files_v6)):
-            l.log_info('Building v{}...'.format(ip_type))
+            l.log_info('Building {} (IPv{})...'.format(
+                files['target_file'], ip_type))
             with open(os.path.join(stage_dir, files['target_file']),
                       'w') as f:
                 for ctnr in Ctnr.objects.all():
