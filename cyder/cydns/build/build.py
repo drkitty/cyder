@@ -235,7 +235,7 @@ def dns_build(rebuild_all=False, dry_run=False, sanity_check=True, verbosity=0,
         for n in built:
             size_diff += os.stat(path.join(stage_dir, n)).st_size
 
-        l.log_notice("prod size - stage size = {}".format(size_diff))
+        l.log_notice("stage size - prod size = {}".format(size_diff))
 
         # Do sanity check.
 
