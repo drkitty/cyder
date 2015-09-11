@@ -518,8 +518,8 @@ DNSBUILD = {
     'named_checkzone_opts': '',
 
     # None means no limit
-    'size_decrease_limit': 500,
-    'size_increase_limit': 500,
+    'size_decrease_limit': 60000,
+    'size_increase_limit': 60000,
 
     'stop_file': '/tmp/cyder_dns.stop',
     'stop_file_email_interval': 1800,  # 30 minutes
@@ -559,8 +559,8 @@ DHCPBUILD = {
     },
 
     # None means no limit
-    'size_decrease_limit': 500,
-    'size_increase_limit': 500,
+    'size_decrease_limit': 60000,
+    'size_increase_limit': 60000,
 
     'stop_file': '/tmp/cyder_dhcp.stop',
     'stop_file_email_interval': 1800,  # 30 minutes
