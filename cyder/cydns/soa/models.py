@@ -159,14 +159,18 @@ class SOA(BaseModel, ObjectUrlMixin):
                 domain__soa=self, views=view
             ).order_by('start_upper', 'start_lower')
 
-        for rec in reversible_records:
-            ss.append(rec.dns_build(reverse=self.is_reverse))
+        def append_if_not_empty(lst, item):
+            if item:
+                lst.append(item)
 
         for rec in normal_records:
-            ss.append(rec.dns_build())
+            append_if_not_empty(ss, rec.dns_build())
+
+        for rec in reversible_records:
+            append_if_not_empty(ss, rec.dns_build(reverse=self.is_reverse))
 
         for rng in ranges:
-            ss.append(rng.dns_build(reverse=self.is_reverse))
+            append_if_not_empty(ss, rng.dns_build(reverse=self.is_reverse))
 
         return '\n'.join(ss)
 
