@@ -146,31 +146,39 @@ class SOA(BaseModel, ObjectUrlMixin):
                 domain__soa=self, views=view, dns_enabled=True
             ).order_by('fqdn')
 
-            ranges = chain(*[
-                d.get_related_ranges().filter(views=view).order_by(
-                    'start_upper', 'start_lower')
-                for d in self.domain_set.all() if d.ip_type == '4'
-            ])
+            ranges = reduce(
+                (lambda x, y: x | y),
+                (
+                    d.get_related_ranges().filter(views=view)
+                    for d in self.domain_set.all() if d.ip_type == '4'
+                ),
+                Range.objects.none()
+            ).distinct().order_by('start_upper', 'start_lower')
         else:
             reversible_records = StaticInterface.objects.filter(
                 domain__soa=self, views=view, dns_enabled=True
             ).order_by('fqdn')
+
             ranges = Range.objects.filter(
                 domain__soa=self, views=view
             ).order_by('start_upper', 'start_lower')
 
-        def append_if_not_empty(lst, item):
-            if item:
-                lst.append(item)
-
         for rec in normal_records:
-            append_if_not_empty(ss, rec.dns_build())
+            line = rec.dns_build()
+            if line:
+                ss.append(line)
 
         for rec in reversible_records:
-            append_if_not_empty(ss, rec.dns_build(reverse=self.is_reverse))
+            line = rec.dns_build(reverse=self.is_reverse)
+            if line:
+                ss.append(line)
 
+        last = None
         for rng in ranges:
-            append_if_not_empty(ss, rng.dns_build(reverse=self.is_reverse))
+            line = rng.dns_build(reverse=self.is_reverse)
+            if line:
+                ss.append(line)
+                last = rng
 
         return '\n'.join(ss)
 
