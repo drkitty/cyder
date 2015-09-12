@@ -20,6 +20,9 @@ class BaseModel(models.Model):
     def __str__(self):
         return unicode(self).encode('ascii', 'replace')
 
+    def __repr__(self):
+        return '<' + str(self.__class__) + ': ' + str(self) + '>'
+
     @classproperty
     @classmethod
     def pretty_type(cls):
