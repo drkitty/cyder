@@ -143,7 +143,7 @@ class SOA(BaseModel, ObjectUrlMixin):
 
         if self.is_reverse:
             reversible_records = StaticInterface.objects.filter(
-                domain__soa=self, views=view, dns_enabled=True
+                reverse_domain__soa=self, views=view, dns_enabled=True
             ).order_by('fqdn')
 
             ranges = reduce(
@@ -173,12 +173,10 @@ class SOA(BaseModel, ObjectUrlMixin):
             if line:
                 ss.append(line)
 
-        last = None
         for rng in ranges:
             line = rng.dns_build(reverse=self.is_reverse)
             if line:
                 ss.append(line)
-                last = rng
 
         return '\n'.join(ss)
 
